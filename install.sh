@@ -1,6 +1,6 @@
 #!/bin/sh
 # Dotfiles installer
-# Installs: yazi, tmux (Oh my tmux! + plugins), yazi plugins
+# Installs: common tools, yazi, tmux (Oh my tmux! + plugins), yazi plugins
 # Compatible with: bash, zsh, fish (via shebang)
 # Supported OS: macOS (brew), Arch Linux (pacman), Ubuntu/Debian (curl)
 
@@ -33,7 +33,7 @@ detect_os() {
 }
 
 # =============================================
-# Install packages via system package manager
+# Helpers
 # =============================================
 install_with_brew() {
     if ! command -v brew >/dev/null 2>&1; then
@@ -49,11 +49,70 @@ install_with_pacman() {
     sudo pacman -S --needed --noconfirm "$@"
 }
 
+is_installed() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+# =============================================
+# Common tools: lazygit, fzf, ripgrep, fd, ghostty
+# Only auto-installed on macOS and Arch Linux.
+# On Ubuntu/Debian, these often require manual compilation.
+# =============================================
+install_common_tools() {
+    echo "=== Installing common tools ==="
+
+    case "$OS" in
+        macos)
+            TOOLS_TO_INSTALL=""
+            is_installed lazygit  || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL lazygit"
+            is_installed fzf      || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL fzf"
+            is_installed rg       || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL ripgrep"
+            is_installed fd       || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL fd"
+            is_installed ghostty  || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL ghostty"
+            if [ -n "$TOOLS_TO_INSTALL" ]; then
+                install_with_brew $TOOLS_TO_INSTALL
+            else
+                echo "All common tools already installed."
+            fi
+            ;;
+        arch)
+            TOOLS_TO_INSTALL=""
+            is_installed lazygit  || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL lazygit"
+            is_installed fzf      || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL fzf"
+            is_installed rg       || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL ripgrep"
+            is_installed fd       || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL fd"
+            is_installed ghostty  || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL ghostty"
+            if [ -n "$TOOLS_TO_INSTALL" ]; then
+                install_with_pacman $TOOLS_TO_INSTALL
+            else
+                echo "All common tools already installed."
+            fi
+            ;;
+        ubuntu|linux-unknown)
+            echo ""
+            echo "  [!] Ubuntu/Debian detected."
+            echo "  The following tools may need manual compilation or newer repos:"
+            echo "    - lazygit   : https://github.com/jesseduffield/lazygit#installation"
+            echo "    - fzf       : https://github.com/junegunn/fzf#installation"
+            echo "    - ripgrep   : https://github.com/BurntSushi/ripgrep#installation"
+            echo "    - fd        : https://github.com/sharkdp/fd#installation"
+            echo "    - ghostty   : https://github.com/ghostty-org/ghostty"
+            echo "  Please install them manually for your distribution version."
+            echo ""
+            ;;
+    esac
+}
+
 # =============================================
 # Yazi - Terminal file manager
 # =============================================
 install_yazi() {
     echo "=== Installing Yazi ==="
+    if is_installed yazi; then
+        echo "Yazi already installed: $(yazi --version)"
+        return
+    fi
+
     case "$OS" in
         macos)
             install_with_brew yazi
@@ -112,7 +171,6 @@ configure_tmux() {
     TMUX_LOCAL_SOURCE="$SCRIPT_DIR/tmux/.tmux.conf.local"
     TMUX_LOCAL_TARGET="$HOME/.tmux.conf.local"
 
-    # Symlink: ~/.tmux.conf -> dotfiles/tmux/.tmux.conf
     if [ ! -f "$TMUX_SOURCE" ]; then
         echo "Warning: source not found: $TMUX_SOURCE, skipping tmux config."
         return
@@ -133,7 +191,6 @@ configure_tmux() {
         echo "Symlink created: $TMUX_TARGET -> $TMUX_SOURCE"
     fi
 
-    # Copy .tmux.conf.local to ~ (user customization file)
     if [ -f "$TMUX_LOCAL_SOURCE" ]; then
         if [ ! -f "$TMUX_LOCAL_TARGET" ]; then
             cp "$TMUX_LOCAL_SOURCE" "$TMUX_LOCAL_TARGET"
@@ -149,11 +206,11 @@ configure_tmux() {
 # =============================================
 install_tpm() {
     echo "=== Installing tpm ==="
-    if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
+    if [ -d "$HOME/.tmux/plugins/tpm" ]; then
+        echo "tpm already installed."
+    else
         git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
         echo "tpm installed."
-    else
-        echo "tpm already installed."
     fi
     echo "tmux plugins will auto-install on next launch, or press prefix + I."
 }
@@ -162,6 +219,7 @@ install_tpm() {
 # Main
 # =============================================
 detect_os
+install_common_tools
 install_yazi
 install_yazi_plugins
 configure_tmux
