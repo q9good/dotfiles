@@ -54,21 +54,34 @@ is_installed() {
 }
 
 # =============================================
-# Common tools: lazygit, fzf, ripgrep, fd, ghostty
+# Common tools: lazygit, fzf, ripgrep, fd, ghostty, clipboard utils
 # Only auto-installed on macOS and Arch Linux.
 # On Ubuntu/Debian, these often require manual compilation.
 # =============================================
+
+# Check if a clipboard tool is available
+has_clipboard_tool() {
+    is_installed pbcopy || is_installed xsel || is_installed xclip || is_installed wl-copy
+}
+
+# Collect missing tools into TOOLS_TO_INSTALL (space-separated)
+# Usage: check_tool <command_name> <package_name>
+check_tool() {
+    is_installed "$1" || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL $2"
+}
+
 install_common_tools() {
     echo "=== Installing common tools ==="
+    TOOLS_TO_INSTALL=""
 
     case "$OS" in
         macos)
-            TOOLS_TO_INSTALL=""
-            is_installed lazygit  || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL lazygit"
-            is_installed fzf      || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL fzf"
-            is_installed rg       || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL ripgrep"
-            is_installed fd       || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL fd"
-            is_installed ghostty  || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL ghostty"
+            check_tool lazygit  lazygit
+            check_tool fzf      fzf
+            check_tool rg       ripgrep
+            check_tool fd       fd
+            check_tool ghostty  ghostty
+            # macOS has pbcopy built-in, no extra clipboard tool needed
             if [ -n "$TOOLS_TO_INSTALL" ]; then
                 install_with_brew $TOOLS_TO_INSTALL
             else
@@ -76,12 +89,13 @@ install_common_tools() {
             fi
             ;;
         arch)
-            TOOLS_TO_INSTALL=""
-            is_installed lazygit  || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL lazygit"
-            is_installed fzf      || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL fzf"
-            is_installed rg       || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL ripgrep"
-            is_installed fd       || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL fd"
-            is_installed ghostty  || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL ghostty"
+            check_tool lazygit  lazygit
+            check_tool fzf      fzf
+            check_tool rg       ripgrep
+            check_tool fd       fd
+            check_tool ghostty  ghostty
+            # clipboard tools for tmux copy-to-os-clipboard
+            has_clipboard_tool || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL xsel xclip wl-clipboard"
             if [ -n "$TOOLS_TO_INSTALL" ]; then
                 install_with_pacman $TOOLS_TO_INSTALL
             else
@@ -89,6 +103,11 @@ install_common_tools() {
             fi
             ;;
         ubuntu|linux-unknown)
+            # clipboard tools can be installed via apt
+            if ! has_clipboard_tool; then
+                echo "Installing clipboard tools (xsel, xclip)..."
+                sudo apt-get install -y xsel xclip 2>/dev/null || echo "  [!] Failed to install clipboard tools, please install xsel or xclip manually."
+            fi
             echo ""
             echo "  [!] Ubuntu/Debian detected."
             echo "  The following tools may need manual compilation or newer repos:"
@@ -148,17 +167,27 @@ install_yazi() {
 install_yazi_plugins() {
     echo "=== Installing Yazi plugins ==="
     YA_CMD="$(command -v ya 2>/dev/null || echo "$HOME/.local/bin/ya")"
-    "$YA_CMD" pkg add yazi-rs/plugins:smart-enter
-    "$YA_CMD" pkg add yazi-rs/plugins:full-border
-    "$YA_CMD" pkg add yazi-rs/plugins:toggle-pane
-    "$YA_CMD" pkg add yazi-rs/plugins:jump-to-char
-    "$YA_CMD" pkg add yazi-rs/plugins:git
-    "$YA_CMD" pkg add yazi-rs/plugins:smart-filter
-    "$YA_CMD" pkg add yazi-rs/plugins:chmod
-    "$YA_CMD" pkg add yazi-rs/plugins:smart-paste
-    "$YA_CMD" pkg add yazi-rs/plugins:diff
-    "$YA_CMD" pkg add yazi-rs/plugins:mime-ext
-    echo "Yazi plugins installed."
+    INSTALLED_PLUGINS="$("$YA_CMD" pkg list 2>/dev/null || true)"
+
+    yazi_pkg_add() {
+        if echo "$INSTALLED_PLUGINS" | grep -q "$1"; then
+            echo "  Already installed: $1"
+        else
+            "$YA_CMD" pkg add "$1"
+        fi
+    }
+
+    yazi_pkg_add yazi-rs/plugins:smart-enter
+    yazi_pkg_add yazi-rs/plugins:full-border
+    yazi_pkg_add yazi-rs/plugins:toggle-pane
+    yazi_pkg_add yazi-rs/plugins:jump-to-char
+    yazi_pkg_add yazi-rs/plugins:git
+    yazi_pkg_add yazi-rs/plugins:smart-filter
+    yazi_pkg_add yazi-rs/plugins:chmod
+    yazi_pkg_add yazi-rs/plugins:smart-paste
+    yazi_pkg_add yazi-rs/plugins:diff
+    yazi_pkg_add yazi-rs/plugins:mime-ext
+    echo "Yazi plugins done."
 }
 
 # =============================================
