@@ -2,11 +2,35 @@
 
 Personal dotfiles managed in `~/.config`, including configurations for:
 
-- **nvim** — [LazyVim](https://www.lazyvim.org/) based Neovim configuration
-- **tmux** — [Oh my tmux!](https://github.com/gpakosz/.tmux) with Catppuccin theme, vim-tmux-navigator, tpm plugins
+- **nvim** — [LazyVim](https://www.lazyvim.org/) based Neovim configuration with Catppuccin Mocha theme
+- **tmux** — [Oh my tmux!](https://github.com/gpakosz/.tmux) with Catppuccin Mocha theme, vim-tmux-navigator, tpm plugins
 - **fish** — Fish shell configuration
-- **yazi** — Terminal file manager with plugins
+- **yazi** — Terminal file manager with plugins (smart-enter, full-border, git, chmod, diff, etc.)
 - **htop** — System monitor configuration
+- **uv** — Python package manager configuration
+
+## Features
+
+### Neovim LSP Support
+
+Enabled via LazyVim extras (`lazyvim.json`):
+
+| Language | Extra | LSP Server |
+|----------|-------|------------|
+| C/C++ | `lang.clangd` | clangd |
+| Rust | `lang.rust` | rust-analyzer |
+| Python | `lang.python` | basedpyright / pyright |
+| Markdown | `lang.markdown` | marksman |
+
+> **clangd tip**: clangd looks for `compile_commands.json` in the project root and `build/` by default. For custom paths, create a `.clangd` file in the project root:
+> ```yaml
+> CompileFlags:
+>   CompilationDatabase: /path/to/build/directory
+> ```
+
+### Seamless Navigation
+
+`C-h/j/k/l` works across both tmux panes and Neovim splits thanks to [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator), configured on both sides.
 
 ## Quick Start (New Machine)
 
@@ -42,10 +66,12 @@ sh ~/.config/install.sh
 ```
 
 This will:
+- **Install common tools** — curl, git, tmux, fzf, fd, ripgrep, bat, eza, zoxide, lazygit, lua, unzip, jq, clipboard tools
 - **Install yazi** — via `brew` (macOS), `pacman` (Arch), or `curl` (Ubuntu/Debian)
-- **Install yazi plugins** — smart-enter, full-border, git, chmod, etc.
+- **Install yazi plugins** — smart-enter, full-border, toggle-pane, jump-to-char, git, smart-filter, chmod, smart-paste, diff, mime-ext
 - **Configure tmux** — symlink `~/.tmux.conf`, copy `.tmux.conf.local`
 - **Install tpm** — tmux plugin manager
+- **Ghostty terminfo** — prints instructions if `xterm-ghostty` terminfo is missing (for SSH)
 
 ### 3. Finalize tmux setup
 
@@ -66,7 +92,7 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 
 ## Cheatsheet
 
-### Tmux (Oh my tmux!, prefix = `C-b`)
+### Tmux (Oh my tmux!, prefix = `C-a`)
 
 #### Session & Window
 
@@ -77,9 +103,8 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 | `prefix + &` | Kill window |
 | `prefix + n` / `p` | Next / previous window |
 | `prefix + 0-9` | Switch to window by number |
-| `C-h` (prefix) / `C-l` (prefix) | Previous / next window |
 | `prefix + d` | Detach session |
-| `prefix + $` | Rename session |
+| `prefix +  | Rename session |
 | `prefix + s` | List sessions |
 
 #### Pane
@@ -88,7 +113,6 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 |-----|--------|
 | `prefix + "` | Split horizontally |
 | `prefix + %` or `prefix + _` | Split vertically |
-| `prefix + h/j/k/l` | Select pane (with prefix) |
 | `C-h/j/k/l` | Navigate panes & nvim windows seamlessly (vim-tmux-navigator) |
 | `prefix + q` | Show pane numbers |
 | `prefix + z` | Toggle pane zoom |
@@ -112,7 +136,7 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 |-----|--------|
 | `prefix + Enter` | Enter copy mode |
 | `v` (in copy mode) | Begin selection |
-| `y` (in copy mode) | Copy selection (tmux-yank) |
+| `y` (in copy mode) | Copy selection (tmux-yank, auto-copies to OS clipboard) |
 | `prefix + p` | Paste buffer |
 
 ---
@@ -137,9 +161,13 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 | Key | Action |
 |-----|--------|
 | `C-h/j/k/l` | Navigate between nvim splits & tmux panes (vim-tmux-navigator) |
-| `<leader>bd` | Delete buffer |
 | `<leader>-` | Split below |
 | `<leader>\|` | Split right |
+| `<leader>wd` | Close current split window |
+| `C-w c` | Close current split window (Vim native) |
+| `<leader>wo` | Close all other split windows |
+| `C-w o` | Close all other split windows (Vim native) |
+| `<leader>bd` | Delete buffer |
 | `[b` / `]b` | Previous / next buffer |
 
 #### LSP & Code
@@ -148,11 +176,14 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 |-----|--------|
 | `gd` | Go to definition |
 | `gr` | Go to references |
+| `gI` | Go to implementation |
+| `gy` | Go to type definition |
 | `K` | Hover documentation |
 | `<leader>ca` | Code action |
 | `<leader>cr` | Rename symbol |
 | `<leader>cd` | Line diagnostics |
 | `[d` / `]d` | Previous / next diagnostic |
+| `<leader>cl` | LSP info |
 
 #### Git
 
@@ -213,12 +244,12 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 
 ---
 
-## Switching Tmux Theme
+## Tmux Theme
 
-Both **Catppuccin** (default) and **Tokyo Night** are installed. To switch:
+The current theme is **Catppuccin Mocha**, loaded via tpm plugin. To change:
 
 1. `prefix + e` to edit `.tmux.conf.local`
-2. In the `# -- active plugins ---` section, put your preferred theme **last** (last loaded wins)
+2. Modify the `@catppuccin_flavor` option or swap the theme plugin
 3. Save and `prefix + r` to reload
 
 ## Supported Platforms
