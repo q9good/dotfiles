@@ -378,10 +378,7 @@ tmux_conf_copy_to_os_clipboard=true
 # options passed to urlscan
 tmux_conf_urlscan_options="--compact --dedupe"
 
-
 # -- user customizations -------------------------------------------------------
-
-# this is the place to override or undo settings
 
 # increase history size
 #set -g history-limit 10000
@@ -390,19 +387,15 @@ tmux_conf_urlscan_options="--compact --dedupe"
 set -g mouse on
 
 # force Vi mode
-#   really you should export VISUAL or EDITOR environment variable, see manual
 #set -g status-keys vi
 #set -g mode-keys vi
 
-# replace C-b by C-a instead of using both prefixes
-# set -gu prefix2
-# unbind C-a
-# unbind C-b
-# set -g prefix C-a
-# bind C-a send-prefix
-
-# if you don't want Oh my tmux! to alter a binding or a setting, use #!important
-# bind c new-window -c '#{pane_current_path}' #!important
+# replace C-b by C-a
+set -gu prefix2                #!important
+unbind C-a                     #!important
+unbind C-b                     #!important
+set -g prefix C-a              #!important
+bind C-a send-prefix           #!important
 
 # display a message after toggling mouse support
 bind m run "cut -c3- '#{TMUX_CONF}' | sh -s _toggle_mouse" \; display 'mouse #{?#{mouse},on,off}'
@@ -425,16 +418,6 @@ bind -T copy-mode-vi C-l select-pane -R
 
 # -- tpm -----------------------------------------------------------------------
 
-# while I don't use tpm myself, many people requested official support so here
-# is a seamless integration that automatically installs plugins in parallel
-
-# whenever a plugin introduces a variable to be used in 'status-left' or
-# 'status-right', you can use it in 'tmux_conf_theme_status_left' and
-# 'tmux_conf_theme_status_right' variables.
-
-# by default, launching tmux will update tpm and all plugins
-#   - true (default)
-#   - false
 tmux_conf_update_plugins_on_launch=true
 
 # by default, reloading the configuration will update tpm and all plugins
@@ -446,34 +429,23 @@ tmux_conf_update_plugins_on_reload=true
 # plugins are enabled
 #   - true (default)
 #   - false
-tmux_conf_uninstall_plugins_on_reload=true
+tmux_conf_uninstall_plugins_on_reload=false
 
-# /!\ the tpm bindings differ slightly from upstream:
-#   - installing plugins: <prefix> + I
-#   - uninstalling plugins: <prefix> + Alt + u
-#   - updating plugins: <prefix> + u
-
-# /!\ do not add set -g @plugin 'tmux-plugins/tpm'
-# /!\ do not add run '~/.tmux/plugins/tpm/tpm'
-
-# /!\ the 'set -g @tpm_plugins' syntax is not supported
-# to enable a plugin, use the 'set -g @plugin' syntax:
-# visit https://github.com/tmux-plugins for available plugins
-#set -g @plugin 'tmux-plugins/tmux-copycat'
-#set -g @plugin 'tmux-plugins/tmux-cpu'
-#set -g @plugin 'tmux-plugins/tmux-resurrect'
-#set -g @plugin 'tmux-plugins/tmux-continuum'
-#set -g @continuum-restore 'on'
-
-# -- active plugins ---
-set -g @plugin 'tmux-plugins/tmux-yank'
-set -g @plugin 'janoamaral/tokyo-night-tmux'
-set -g @plugin 'catppuccin/tmux'
+# NOTE: Oh my tmux! requires "set-option" (not "set") for plugin discovery.
+# see: __discover_plugins regex: ^set-option\s+-g\s+\@plugin
+set-option -g @plugin 'tmux-plugins/tmux-yank'
+set-option -g @plugin 'catppuccin/tmux'
 
 # Catppuccin theme configuration
-set -g @catppuccin_flavor 'mocha'
+set-option -g @catppuccin_flavor 'mocha'
 
-
+# -- fallback tpm loader -------------------------------------------------------
+# Oh my tmux! _apply_plugins has a race condition and may not always fire.
+# This delayed run ensures tpm + Catppuccin always load (after _apply_theme).
+# We set @tpm_plugins so tpm's source_plugins.sh can find them (it cannot
+# parse Oh my tmux!'s source-file format to discover .tmux.conf.local).
+set-environment -g TMUX_PLUGIN_MANAGER_PATH "$HOME/.tmux/plugins"
+run -b 'sleep 5 && tmux set -g @tpm_plugins "tmux-plugins/tpm tmux-plugins/tmux-yank catppuccin/tmux" && [ -f "$HOME/.tmux/plugins/tpm/tpm" ] && "$HOME/.tmux/plugins/tpm/tpm"'
 
 # -- custom variables ----------------------------------------------------------
 

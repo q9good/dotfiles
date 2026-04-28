@@ -54,74 +54,105 @@ is_installed() {
 }
 
 # =============================================
-# Common tools: lazygit, fzf, ripgrep, fd, ghostty, clipboard utils
-# Only auto-installed on macOS and Arch Linux.
-# On Ubuntu/Debian, these often require manual compilation.
+# Common tools
 # =============================================
 
-# Check if a clipboard tool is available
+# Check if a clipboard tool is available (for tmux-yank)
 has_clipboard_tool() {
     is_installed pbcopy || is_installed xsel || is_installed xclip || is_installed wl-copy
 }
 
 # Collect missing tools into TOOLS_TO_INSTALL (space-separated)
-# Usage: check_tool <command_name> <package_name>
+# Usage: check_tool <command> [package_name]
 check_tool() {
-    is_installed "$1" || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL $2"
+    if is_installed "$1"; then
+        echo "  Already installed: $1"
+    else
+        TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL ${2:-$1}"
+    fi
 }
 
 install_common_tools() {
     echo "=== Installing common tools ==="
     TOOLS_TO_INSTALL=""
 
+    check_tool curl
+    check_tool git
+    check_tool tmux
+    check_tool fzf
+    check_tool fd
+    check_tool rg ripgrep
+    check_tool bat
+    check_tool eza
+    check_tool zoxide
+    check_tool lazygit
+    check_tool lua
+    check_tool unzip
+    check_tool jq
+
+    # Clipboard tools (needed by tmux-yank for mouse copy)
+    if ! has_clipboard_tool; then
+        case "$OS" in
+            macos)
+                # pbcopy is built-in, should never reach here
+                ;;
+            arch)
+                TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL xsel xclip wl-clipboard"
+                ;;
+            ubuntu)
+                TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL xsel xclip"
+                ;;
+        esac
+    else
+        echo "  Clipboard tool available."
+    fi
+
+    if [ -z "$TOOLS_TO_INSTALL" ]; then
+        echo "All common tools already installed."
+        return
+    fi
+
+    echo "  Missing:$TOOLS_TO_INSTALL"
+
     case "$OS" in
         macos)
-            check_tool lazygit  lazygit
-            check_tool fzf      fzf
-            check_tool rg       ripgrep
-            check_tool fd       fd
-            check_tool ghostty  ghostty
-            # macOS has pbcopy built-in, no extra clipboard tool needed
-            if [ -n "$TOOLS_TO_INSTALL" ]; then
-                install_with_brew $TOOLS_TO_INSTALL
-            else
-                echo "All common tools already installed."
-            fi
+            install_with_brew $TOOLS_TO_INSTALL
             ;;
         arch)
-            check_tool lazygit  lazygit
-            check_tool fzf      fzf
-            check_tool rg       ripgrep
-            check_tool fd       fd
-            check_tool ghostty  ghostty
-            # clipboard tools for tmux copy-to-os-clipboard
-            has_clipboard_tool || TOOLS_TO_INSTALL="$TOOLS_TO_INSTALL xsel xclip wl-clipboard"
-            if [ -n "$TOOLS_TO_INSTALL" ]; then
-                install_with_pacman $TOOLS_TO_INSTALL
-            else
-                echo "All common tools already installed."
-            fi
+            install_with_pacman $TOOLS_TO_INSTALL
             ;;
-        ubuntu|linux-unknown)
-            # clipboard tools can be installed via apt
-            if ! has_clipboard_tool; then
-                echo "Installing clipboard tools (xsel, xclip)..."
-                sudo apt-get install -y xsel xclip 2>/dev/null || echo "  [!] Failed to install clipboard tools, please install xsel or xclip manually."
-            fi
-            echo ""
-            echo "  [!] Ubuntu/Debian detected."
-            echo "  The following tools may need manual compilation or newer repos:"
-            echo "    - lazygit   : https://github.com/jesseduffield/lazygit#installation"
-            echo "    - fzf       : https://github.com/junegunn/fzf#installation"
-            echo "    - ripgrep   : https://github.com/BurntSushi/ripgrep#installation"
-            echo "    - fd        : https://github.com/sharkdp/fd#installation"
-            echo "    - ghostty   : https://github.com/ghostty-org/ghostty"
-            echo "  Please install them manually for your distribution version."
-            echo ""
+        ubuntu)
+            echo "  [!] Auto-install not supported on Ubuntu (system packages may be outdated)."
+            echo "  Please install the following manually (e.g. via Homebrew, cargo, or latest .deb):"
+            echo "     $TOOLS_TO_INSTALL"
+            ;;
+        *)
+            echo "  [!] Unsupported OS. Please install manually:$TOOLS_TO_INSTALL"
             ;;
     esac
 }
 
+# =============================================
+# Ghostty terminfo (for SSH into servers)
+# Fixes: "missing or unsuitable terminal: xterm-ghostty"
+# =============================================
+install_ghostty_terminfo() {
+    if infocmp xterm-ghostty >/dev/null 2>&1 && [ -n "$(infocmp xterm-ghostty 2>/dev/null)" ]; then
+        echo "Ghostty terminfo already installed."
+        return
+    fi
+    echo "=== Ghostty terminfo ==="
+    echo "  [!] xterm-ghostty terminfo not found on this machine."
+    echo "  If you use Ghostty to SSH into this server, run the following"
+    echo "  from your LOCAL Ghostty terminal to install the terminfo:"
+    echo ""
+    echo "      infocmp -x xterm-ghostty | ssh -p <port> <user>@<host> 'mkdir -p ~/.terminfo && tic -x -'"
+    echo ""
+    echo "  Or set a TERM fallback in your local ~/.ssh/config:"
+    echo ""
+    echo "      Host <alias>"
+    echo "          SetEnv TERM=xterm-256color"
+}
 # =============================================
 # Yazi - Terminal file manager
 # =============================================
@@ -249,6 +280,7 @@ install_tpm() {
 # =============================================
 detect_os
 install_common_tools
+install_ghostty_terminfo
 install_yazi
 install_yazi_plugins
 configure_tmux
