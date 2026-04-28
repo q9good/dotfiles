@@ -1,0 +1,20 @@
+Code/
+matplotlib/
+openspec/
+procps/
+timestamps/
+comtool/
+configstore/
+
+# github config for company environment
+.gitconfig-github
+
+# neovim
+**/tt.*
+nvim/tests
+nvim/doc/tags
+nvim/debug
+**/.repro
+**/foo.*
+**/*.log
+nvim/data
