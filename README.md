@@ -92,7 +92,7 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 
 ## Cheatsheet
 
-### Tmux (Oh my tmux!, prefix = `C-a`)
+### Tmux (Oh my tmux!, prefix = `` ` ``)
 
 #### Session & Window
 
@@ -111,14 +111,16 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 
 | Key | Action |
 |-----|--------|
-| `prefix + "` | Split horizontally |
-| `prefix + %` or `prefix + _` | Split vertically |
+| `prefix + -` | Split horizontally (below) |
+| `prefix + \` | Split vertically (right) |
 | `C-h/j/k/l` | Navigate panes & nvim windows seamlessly (vim-tmux-navigator) |
 | `prefix + q` | Show pane numbers |
 | `prefix + z` | Toggle pane zoom |
 | `prefix + x` | Kill pane |
 | `prefix + +` | Maximize pane (Oh my tmux!) |
 | `prefix + m` | Toggle mouse on/off |
+| `prefix + S` | Synchronize panes (broadcast input to all panes) |
+| `prefix + A` | Unsynchronize panes |
 
 #### Plugins & Config
 

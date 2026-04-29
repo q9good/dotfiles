@@ -390,12 +390,20 @@ set -g mouse on
 #set -g status-keys vi
 #set -g mode-keys vi
 
-# replace C-b by C-a
+# replace C-b by `
 set -gu prefix2                #!important
 unbind C-a                     #!important
 unbind C-b                     #!important
-set -g prefix C-a              #!important
-bind C-a send-prefix           #!important
+set -g prefix `                #!important
+bind ` send-prefix             #!important
+
+# split panes with \ and -
+bind \\ split-window -h -c "#{pane_current_path}"
+bind - split-window -v -c "#{pane_current_path}"
+
+# synchronize panes (broadcast input to all panes)
+bind S setw synchronize-panes on \; display "Panes synchronized"
+bind A setw synchronize-panes off \; display "Panes unsynchronized"
 
 # display a message after toggling mouse support
 bind m run "cut -c3- '#{TMUX_CONF}' | sh -s _toggle_mouse" \; display 'mouse #{?#{mouse},on,off}'
