@@ -57,6 +57,32 @@ is_installed() {
 # Common tools
 # =============================================
 
+# Install lazygit from GitHub release binary (for Ubuntu/Debian)
+install_lazygit_binary() {
+    if is_installed lazygit; then
+        echo "  lazygit already installed: $(lazygit --version 2>/dev/null | head -1)"
+        return
+    fi
+    echo "  Installing lazygit from GitHub release..."
+    LAZYGIT_VERSION="$(curl -s https://api.github.com/repos/jesseduffield/lazygit/releases/latest | grep -Po '"tag_name": "v\K[^"]*')"
+    if [ -z "$LAZYGIT_VERSION" ]; then
+        echo "  [!] Failed to fetch lazygit version. Please install manually."
+        return
+    fi
+    ARCH="$(uname -m)"
+    case "$ARCH" in
+        x86_64)  LAZYGIT_ARCH="x86_64" ;;
+        aarch64) LAZYGIT_ARCH="arm64" ;;
+        *)       echo "  [!] Unsupported arch: $ARCH"; return ;;
+    esac
+    mkdir -p ~/.local/bin
+    curl -fLo /tmp/lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_${LAZYGIT_ARCH}.tar.gz"
+    tar xzf /tmp/lazygit.tar.gz -C /tmp lazygit
+    mv /tmp/lazygit ~/.local/bin/lazygit
+    rm -f /tmp/lazygit.tar.gz
+    echo "  lazygit installed: $(~/.local/bin/lazygit --version 2>/dev/null | head -1)"
+}
+
 # Check if a clipboard tool is available (for tmux-yank)
 has_clipboard_tool() {
     is_installed pbcopy || is_installed xsel || is_installed xclip || is_installed wl-copy
@@ -86,6 +112,7 @@ install_common_tools() {
     check_tool eza
     check_tool zoxide
     check_tool lazygit
+    check_tool ruff
     check_tool lua
     check_tool unzip
     check_tool jq
@@ -122,9 +149,39 @@ install_common_tools() {
             install_with_pacman $TOOLS_TO_INSTALL
             ;;
         ubuntu)
-            echo "  [!] Auto-install not supported on Ubuntu (system packages may be outdated)."
-            echo "  Please install the following manually (e.g. via Homebrew, cargo, or latest .deb):"
-            echo "     $TOOLS_TO_INSTALL"
+            # lazygit: install from GitHub release binary
+            if echo "$TOOLS_TO_INSTALL" | grep -q "lazygit"; then
+                install_lazygit_binary
+                TOOLS_TO_INSTALL="$(echo "$TOOLS_TO_INSTALL" | sed 's/ *lazygit */ /g')"
+            fi
+            # ruff: install via pip
+            if echo "$TOOLS_TO_INSTALL" | grep -q "ruff"; then
+                echo "  Installing ruff via pip..."
+                pip3 install --user ruff
+                TOOLS_TO_INSTALL="$(echo "$TOOLS_TO_INSTALL" | sed 's/ *ruff */ /g')"
+            fi
+            # Tools installable via cargo
+            CARGO_TOOLS=""
+            REMAINING_TOOLS=""
+            for tool in $TOOLS_TO_INSTALL; do
+                case "$tool" in
+                    fd)      CARGO_TOOLS="$CARGO_TOOLS fd-find" ;;
+                    ripgrep|bat|eza|zoxide) CARGO_TOOLS="$CARGO_TOOLS $tool" ;;
+                    *) REMAINING_TOOLS="$REMAINING_TOOLS $tool" ;;
+                esac
+            done
+            if [ -n "$(echo "$CARGO_TOOLS" | tr -d ' ')" ]; then
+                if is_installed cargo; then
+                    echo "  Installing via cargo:$CARGO_TOOLS"
+                    cargo install $CARGO_TOOLS
+                else
+                    echo "  [!] cargo not found. Please install Rust first, then run: cargo install$CARGO_TOOLS"
+                fi
+            fi
+            if [ -n "$(echo "$REMAINING_TOOLS" | tr -d ' ')" ]; then
+                echo "  [!] Please install the following manually:"
+                echo "     $REMAINING_TOOLS"
+            fi
             ;;
         *)
             echo "  [!] Unsupported OS. Please install manually:$TOOLS_TO_INSTALL"
@@ -284,6 +341,61 @@ install_tpm() {
 }
 
 # =============================================
+# Neovim image/LaTeX/mermaid tools (local only)
+# On macOS/Arch, install tools for snacks.nvim image viewer.
+# On Ubuntu (SSH remote), these are disabled in nvim config.
+# =============================================
+install_nvim_image_tools() {
+    echo "=== Installing Neovim image/LaTeX/mermaid tools ==="
+    case "$OS" in
+        macos)
+            BREW_TOOLS=""
+            is_installed luarocks  || BREW_TOOLS="$BREW_TOOLS luarocks"
+            is_installed magick   || BREW_TOOLS="$BREW_TOOLS imagemagick"
+            is_installed tectonic || BREW_TOOLS="$BREW_TOOLS tectonic"
+            if [ -n "$BREW_TOOLS" ]; then
+                install_with_brew $BREW_TOOLS
+            fi
+            # mmdc (mermaid-cli) via npm
+            if ! is_installed mmdc; then
+                if is_installed npm; then
+                    echo "  Installing mmdc (mermaid-cli) via npm..."
+                    npm install -g @mermaid-js/mermaid-cli
+                else
+                    echo "  [!] npm not found, skipping mmdc. Install Node.js first."
+                fi
+            else
+                echo "  Already installed: mmdc"
+            fi
+            echo "  All image tools checked."
+            ;;
+        arch)
+            PACMAN_TOOLS=""
+            is_installed luarocks  || PACMAN_TOOLS="$PACMAN_TOOLS luarocks"
+            is_installed magick   || PACMAN_TOOLS="$PACMAN_TOOLS imagemagick"
+            is_installed tectonic || PACMAN_TOOLS="$PACMAN_TOOLS tectonic"
+            if [ -n "$PACMAN_TOOLS" ]; then
+                install_with_pacman $PACMAN_TOOLS
+            fi
+            if ! is_installed mmdc; then
+                if is_installed npm; then
+                    echo "  Installing mmdc (mermaid-cli) via npm..."
+                    npm install -g @mermaid-js/mermaid-cli
+                else
+                    echo "  [!] npm not found, skipping mmdc. Install Node.js first."
+                fi
+            else
+                echo "  Already installed: mmdc"
+            fi
+            echo "  All image tools checked."
+            ;;
+        ubuntu)
+            echo "  Skipping image tools on Ubuntu (disabled in nvim config for SSH remote)."
+            ;;
+    esac
+}
+
+# =============================================
 # Main
 # =============================================
 detect_os
@@ -293,6 +405,7 @@ install_yazi
 install_yazi_plugins
 configure_tmux
 install_tpm
+install_nvim_image_tools
 
 echo ""
 echo "=== All done! ==="

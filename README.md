@@ -32,6 +32,16 @@ Enabled via LazyVim extras (`lazyvim.json`):
 
 `C-h/j/k/l` works across both tmux panes and Neovim splits thanks to [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator), configured on both sides.
 
+### Recommended Workflow (SSH)
+
+```
+Ghostty ──SSH──▶ Remote tmux ──▶ nvim + panes
+```
+
+- **Do not nest tmux locally**. Run tmux only on the remote machine so that `C-h/j/k/l` navigation and OSC 52 clipboard work correctly.
+- SSH disconnect → remote tmux session survives. Reconnect with `ssh host` + `tmux attach`.
+- Clipboard is handled by **OSC 52** (terminal-level), no X11 forwarding needed.
+
 ## Quick Start (New Machine)
 
 ### 1. Clone into `~/.config`
@@ -196,7 +206,7 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 |-----|--------|
 | `gd` | Go to definition |
 | `gr` | Go to references |
-| `gi` | Go to implementation |
+| `gI` | Go to implementation |
 | `gy` | Go to type definition |
 | `K` | Hover documentation |
 | `<leader>ca` | Code action |
