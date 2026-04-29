@@ -252,11 +252,19 @@ configure_tmux() {
     fi
 
     if [ -f "$TMUX_LOCAL_SOURCE" ]; then
-        if [ ! -f "$TMUX_LOCAL_TARGET" ]; then
-            cp "$TMUX_LOCAL_SOURCE" "$TMUX_LOCAL_TARGET"
-            echo "Copied: $TMUX_LOCAL_TARGET"
+        if [ -L "$TMUX_LOCAL_TARGET" ]; then
+            CURRENT_LOCAL_LINK="$(readlink "$TMUX_LOCAL_TARGET")"
+            if [ "$CURRENT_LOCAL_LINK" = "$TMUX_LOCAL_SOURCE" ]; then
+                echo "Symlink already correct: $TMUX_LOCAL_TARGET"
+            else
+                echo "Updating symlink: $TMUX_LOCAL_TARGET (was $CURRENT_LOCAL_LINK)"
+                rm "$TMUX_LOCAL_TARGET"
+                ln -s "$TMUX_LOCAL_SOURCE" "$TMUX_LOCAL_TARGET"
+            fi
         else
-            echo "Local config already exists: $TMUX_LOCAL_TARGET (skipped)"
+            [ -e "$TMUX_LOCAL_TARGET" ] && mv "$TMUX_LOCAL_TARGET" "$TMUX_LOCAL_TARGET.bak.$(date +%Y%m%d%H%M%S)"
+            ln -s "$TMUX_LOCAL_SOURCE" "$TMUX_LOCAL_TARGET"
+            echo "Symlink created: $TMUX_LOCAL_TARGET -> $TMUX_LOCAL_SOURCE"
         fi
     fi
 }
