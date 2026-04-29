@@ -387,8 +387,8 @@ tmux_conf_urlscan_options="--compact --dedupe"
 set -g mouse on
 
 # force Vi mode
-#set -g status-keys vi
-#set -g mode-keys vi
+set -g status-keys vi
+set -g mode-keys vi
 
 # replace C-b by `
 set -gu prefix2                #!important
@@ -410,6 +410,14 @@ bind m run "cut -c3- '#{TMUX_CONF}' | sh -s _toggle_mouse" \; display 'mouse #{?
 
 # move status line to top
 #set -g status-position top
+
+# -- clipboard (OSC 52) --------------------------------------------------------
+# Forward OSC 52 clipboard sequences to the terminal AND set tmux buffer.
+# 'on' = tmux sets its own buffer + forwards OSC 52 to the outer terminal.
+# 'external' = tmux forwards to xsel/xclip (broken without $DISPLAY over SSH).
+# Required for nvim/tmux clipboard to work over SSH without X11 forwarding.
+set -g set-clipboard on
+set -g allow-passthrough on
 
 # -- vim-tmux-navigator --------------------------------------------------------
 # Smart pane switching: seamlessly navigate between tmux panes and nvim windows

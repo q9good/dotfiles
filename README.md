@@ -104,7 +104,7 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 | `prefix + n` / `p` | Next / previous window |
 | `prefix + 0-9` | Switch to window by number |
 | `prefix + d` | Detach session |
-| `prefix +  | Rename session |
+| `prefix + $` | Rename session |
 | `prefix + s` | List sessions |
 
 #### Pane
@@ -115,9 +115,12 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 | `prefix + \` | Split vertically (right) |
 | `C-h/j/k/l` | Navigate panes & nvim windows seamlessly (vim-tmux-navigator) |
 | `prefix + q` | Show pane numbers |
-| `prefix + z` | Toggle pane zoom |
+| `prefix + z` | Toggle pane zoom (temporary fullscreen, panes still exist) |
+| `prefix + +` | Maximize pane (break to new window, press again to restore — Oh my tmux!) |
+| `prefix + !` | Break pane into a new window (one-way) |
+| `:join-pane -t :2` | Move current pane to window 2 (command mode) |
+| `prefix + <` / `>` | Swap pane up / down |
 | `prefix + x` | Kill pane |
-| `prefix + +` | Maximize pane (Oh my tmux!) |
 | `prefix + m` | Toggle mouse on/off |
 | `prefix + S` | Synchronize panes (broadcast input to all panes) |
 | `prefix + A` | Unsynchronize panes |
@@ -132,18 +135,25 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 | `prefix + e` | Edit `.tmux.conf.local` |
 | `prefix + t` | Show clock |
 
-#### Copy Mode
+#### Copy Mode (vi style, `mode-keys vi`)
 
 | Key | Action |
 |-----|--------|
-| `prefix + Enter` | Enter copy mode |
-| `v` (in copy mode) | Begin selection |
-| `y` (in copy mode) | Copy selection (tmux-yank, auto-copies to OS clipboard) |
-| `prefix + p` | Paste buffer |
+| `prefix + Enter` | Enter copy mode (also `prefix + [`) |
+| `h/j/k/l` | Move cursor (left/down/up/right) |
+| `v` | Begin selection |
+| `y` | Copy selection to OS clipboard & exit |
+| `prefix + p` | Paste buffer (also `prefix + ]`) |
+| Mouse drag | Select & auto-copy to clipboard |
+| Double-click / Triple-click | Select word / line & copy |
 
 ---
 
 ### Neovim (LazyVim)
+
+> Full keybinding reference: [`nvim-key.md`](nvim-key.md)
+>
+> **Note**: Neovim 0.11.2+ removed `:LspRestart`. Use `:lsp restart [server]` instead.
 
 #### General
 
@@ -151,26 +161,34 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 |-----|--------|
 | `<Space>` | Leader key |
 | `<leader>qq` | Quit all |
-| `<leader>e` | Open file explorer (neo-tree) |
-| `<leader>ff` | Find files (Telescope) |
-| `<leader>fg` / `<leader>/` | Live grep (Telescope) |
+| `<leader>e` | Open/close file explorer (Snacks Explorer) |
+| `<leader>ff` | Find files |
+| `<leader>/` | Live grep |
 | `<leader>fb` | Find buffers |
 | `<leader>fr` | Recent files |
-| `<leader>:` | Command history |
+| `<leader>fn` | New file |
+| `<leader>?` | Show keybindings (which-key) |
+
+#### File Explorer (Snacks Explorer)
+
+| Key | Action |
+|-----|--------|
+| `l` / `h` | Enter directory / collapse directory |
+| `a` / `d` / `r` | Add / delete / rename file |
+| `y` / `c` / `m` / `p` | Yank path / copy / move / paste |
+| `H` / `I` | Toggle hidden files / gitignored files |
+| `Z` | Collapse all directories |
+| `.` / `<BS>` | Focus directory / go up |
 
 #### Window & Buffer
 
 | Key | Action |
 |-----|--------|
 | `C-h/j/k/l` | Navigate between nvim splits & tmux panes (vim-tmux-navigator) |
-| `<leader>-` | Split below |
-| `<leader>\|` | Split right |
-| `<leader>wd` | Close current split window |
-| `C-w c` | Close current split window (Vim native) |
-| `<leader>wo` | Close all other split windows |
-| `C-w o` | Close all other split windows (Vim native) |
-| `<leader>bd` | Delete buffer |
-| `[b` / `]b` | Previous / next buffer |
+| `<leader>-` / `<leader>\|` | Split below / right |
+| `<leader>wd` | Close window |
+| `<leader>bd` / `<leader>bo` | Delete buffer / delete other buffers |
+| `<S-h>` / `<S-l>` | Previous / next buffer |
 
 #### LSP & Code
 
@@ -178,25 +196,41 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 |-----|--------|
 | `gd` | Go to definition |
 | `gr` | Go to references |
-| `gI` | Go to implementation |
+| `gi` | Go to implementation |
 | `gy` | Go to type definition |
 | `K` | Hover documentation |
 | `<leader>ca` | Code action |
 | `<leader>cr` | Rename symbol |
+| `<leader>cf` | Format code |
 | `<leader>cd` | Line diagnostics |
 | `[d` / `]d` | Previous / next diagnostic |
-| `<leader>cl` | LSP info |
+| `:lsp restart clangd` | Restart clangd (Neovim 0.11.2+) |
+
+#### Flash (Quick Jump)
+
+| Key | Action |
+|-----|--------|
+| `s` | Flash jump (type chars to jump) |
+| `S` | Flash Treesitter select |
 
 #### Git
 
 | Key | Action |
 |-----|--------|
-| `<leader>gg` | LazyGit (if installed) |
-| `<leader>ghb` | Git blame line |
+| `<leader>gg` | LazyGit |
+| `<leader>gb` | Git blame line |
 | `<leader>ghp` | Preview hunk |
-| `<leader>ghs` | Stage hunk |
-| `<leader>ghr` | Reset hunk |
+| `<leader>ghs` / `<leader>ghr` | Stage / reset hunk |
 | `[h` / `]h` | Previous / next hunk |
+
+#### Diagnostics & Trouble
+
+| Key | Action |
+|-----|--------|
+| `<leader>xx` | Diagnostics list (Trouble) |
+| `<leader>xX` | Buffer diagnostics (Trouble) |
+| `<leader>xt` | TODO list (Trouble) |
+| `<leader>sr` | Search & replace (grug-far, multi-file) |
 
 ---
 
