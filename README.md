@@ -103,7 +103,9 @@ Ghostty ──SSH──▶ Remote tmux ──▶ nvim + panes
 
 ## Cheatsheet
 
-### Ghostty (Terminal Emulator)
+### Ghostty (Terminal Emulator, Catppuccin Mocha theme)
+
+Features: `copy-on-select`, `mouse-shift-capture = false` (prevents garbled mouse sequences).
 
 | Key | Action |
 |-----|--------|
@@ -217,6 +219,7 @@ Ghostty ──SSH──▶ Remote tmux ──▶ nvim + panes
 | Key | Action |
 |-----|--------|
 | `gd` | Go to definition |
+| `gD` | Go to declaration |
 | `gr` | Go to references |
 | `gI` | Go to implementation |
 | `gy` | Go to type definition |

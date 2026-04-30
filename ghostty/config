@@ -1,0 +1,39 @@
+# Ghostty Configuration
+# Location: ~/.config/ghostty/config (macOS/Linux)
+
+# =============================================
+# Theme & Appearance
+# =============================================
+theme = Catppuccin Mocha
+copy-on-select = true
+background-image-opacity = 0.75
+mouse-shift-capture = false
+
+# macOS: treat Option key as Alt for keybindings (required for Alt+\ etc.)
+macos-option-as-alt = true
+
+# =============================================
+# Keybindings — Splits
+# =============================================
+# Alt+\ = vertical split (right), Alt+- = horizontal split (down)
+# Consistent with tmux (prefix+\, prefix+-) and nvim (<leader>\, <leader>-)
+keybind = alt+backslash=new_split:right
+keybind = alt+minus=new_split:down
+
+# Alt+x = close current split (consistent with tmux prefix+x)
+keybind = alt+x=close_surface
+
+# C-h/j/k/l = navigate between Ghostty splits.
+# "performable:" ensures these keys are only consumed when goto_split can
+# actually move focus (i.e. multiple Ghostty splits exist). Otherwise the
+# keypress passes through to the running program (tmux/nvim).
+keybind = performable:ctrl+h=goto_split:left
+keybind = performable:ctrl+j=goto_split:down
+keybind = performable:ctrl+k=goto_split:up
+keybind = performable:ctrl+l=goto_split:right
+
+# =============================================
+# Keybindings — Terminal
+# =============================================
+# Ctrl+Shift+R = full terminal reset (fix garbled output after SSH disconnect)
+keybind = ctrl+shift+r=reset
