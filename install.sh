@@ -53,6 +53,46 @@ is_installed() {
     command -v "$1" >/dev/null 2>&1
 }
 
+# Run a command with timeout (default 300s). Kills entire process group on timeout.
+# Usage: run_with_timeout <seconds> <command...>
+# Example: run_with_timeout 300 npm install -g some-package
+# Returns 124 on timeout.
+run_with_timeout() {
+    _rt_secs="$1"
+    shift
+    # Disable set -e locally so non-zero exits/timeout don't abort the whole script
+    set +e
+    if command -v timeout >/dev/null 2>&1; then
+        # Use timeout with SIGKILL to force-kill the entire process tree
+        # First check if timeout supports --signal option
+        if timeout --help 2>&1 | grep -q -- '--signal'; then
+            timeout --signal=KILL "$_rt_secs" "$@"
+        else
+            # Fallback: use -s KILL syntax (older timeout versions)
+            timeout -s KILL "$_rt_secs" "$@"
+        fi
+    else
+        # Fallback for systems without 'timeout' (e.g. macOS without coreutils)
+        "$@" &
+        _rt_pid=$!
+        ( sleep "$_rt_secs" && kill -TERM "$_rt_pid" 2>/dev/null && sleep 2 && kill -9 "$_rt_pid" 2>/dev/null || true ) &
+        _rt_wdog=$!
+        wait "$_rt_pid" 2>/dev/null
+        _rt_ret=$?
+        kill "$_rt_wdog" 2>/dev/null || true
+        wait "$_rt_wdog" 2>/dev/null || true
+    fi
+    _rt_ret=$?
+    # Map SIGKILL (137) and standard timeout (124) to our timeout code (124)
+    if [ "$_rt_ret" -eq 137 ] || [ "$_rt_ret" -eq 124 ]; then
+        echo "  [!] Command timed out after ${_rt_secs}s"
+        return 124
+    fi
+    # Re-enable set -e before returning
+    set -e
+    return "$_rt_ret"
+}
+
 # =============================================
 # Common tools
 # =============================================
@@ -376,8 +416,24 @@ install_nvim_image_tools() {
             # mmdc (mermaid-cli) via npm
             if ! is_installed mmdc; then
                 if is_installed npm; then
-                    echo "  Installing mmdc (mermaid-cli) via npm..."
-                    npm install -g @mermaid-js/mermaid-cli
+                    echo "  Installing mmdc (mermaid-cli) via npm (timeout: 120s)..."
+                    if ! run_with_timeout 120 npm install -g --no-audit --no-fund @mermaid-js/mermaid-cli; then
+                        ret=$?
+                        if [ $ret -eq 124 ]; then
+                            echo "  [!] npm install timed out after 120s. Network may be slow."
+                            echo "  Try manually later: npm install -g @mermaid-js/mermaid-cli"
+                        else
+                            echo "  npm global install failed. Retrying with user prefix: $HOME/.local"
+                            npm config set prefix "$HOME/.local"
+                            if ! run_with_timeout 120 npm install -g --no-audit --no-fund @mermaid-js/mermaid-cli; then
+                                echo "  [!] mmdc install failed. Skipping."
+                            fi
+                            case ":$PATH:" in
+                                *":$HOME/.local/bin:"*) ;;
+                                *) export PATH="$HOME/.local/bin:$PATH" ;;
+                            esac
+                        fi
+                    fi
                 else
                     echo "  [!] npm not found, skipping mmdc. Install Node.js first."
                 fi
@@ -396,8 +452,24 @@ install_nvim_image_tools() {
             fi
             if ! is_installed mmdc; then
                 if is_installed npm; then
-                    echo "  Installing mmdc (mermaid-cli) via npm..."
-                    npm install -g @mermaid-js/mermaid-cli
+                    echo "  Installing mmdc (mermaid-cli) via npm (timeout: 120s)..."
+                    if ! run_with_timeout 120 npm install -g --no-audit --no-fund @mermaid-js/mermaid-cli; then
+                        ret=$?
+                        if [ $ret -eq 124 ]; then
+                            echo "  [!] npm install timed out after 120s. Network may be slow."
+                            echo "  Try manually later: npm install -g @mermaid-js/mermaid-cli"
+                        else
+                            echo "  npm global install failed. Retrying with user prefix: $HOME/.local"
+                            npm config set prefix "$HOME/.local"
+                            if ! run_with_timeout 120 npm install -g --no-audit --no-fund @mermaid-js/mermaid-cli; then
+                                echo "  [!] mmdc install failed. Skipping."
+                            fi
+                            case ":$PATH:" in
+                                *":$HOME/.local/bin:"*) ;;
+                                *) export PATH="$HOME/.local/bin:$PATH" ;;
+                            esac
+                        fi
+                    fi
                 else
                     echo "  [!] npm not found, skipping mmdc. Install Node.js first."
                 fi
