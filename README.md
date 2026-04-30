@@ -2,45 +2,13 @@
 
 Personal dotfiles managed in `~/.config`, including configurations for:
 
+- **ghostty** — [Ghostty](https://ghostty.org/) terminal emulator configuration (splits, navigation, terminal reset)
 - **nvim** — [LazyVim](https://www.lazyvim.org/) based Neovim configuration with Catppuccin Mocha theme
 - **tmux** — [Oh my tmux!](https://github.com/gpakosz/.tmux) with Catppuccin Mocha theme, vim-tmux-navigator, tpm plugins
 - **fish** — Fish shell configuration
 - **yazi** — Terminal file manager with plugins (smart-enter, full-border, git, chmod, diff, etc.)
 - **htop** — System monitor configuration
 - **uv** — Python package manager configuration
-
-## Features
-
-### Neovim LSP Support
-
-Enabled via LazyVim extras (`lazyvim.json`):
-
-| Language | Extra | LSP Server |
-|----------|-------|------------|
-| C/C++ | `lang.clangd` | clangd |
-| Rust | `lang.rust` | rust-analyzer |
-| Python | `lang.python` | basedpyright / pyright |
-| Markdown | `lang.markdown` | marksman |
-
-> **clangd tip**: clangd looks for `compile_commands.json` in the project root and `build/` by default. For custom paths, create a `.clangd` file in the project root:
-> ```yaml
-> CompileFlags:
->   CompilationDatabase: /path/to/build/directory
-> ```
-
-### Seamless Navigation
-
-`C-h/j/k/l` works across both tmux panes and Neovim splits thanks to [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator), configured on both sides.
-
-### Recommended Workflow (SSH)
-
-```
-Ghostty ──SSH──▶ Remote tmux ──▶ nvim + panes
-```
-
-- **Do not nest tmux locally**. Run tmux only on the remote machine so that `C-h/j/k/l` navigation and OSC 52 clipboard work correctly.
-- SSH disconnect → remote tmux session survives. Reconnect with `ssh host` + `tmux attach`.
-- Clipboard is handled by **OSC 52** (terminal-level), no X11 forwarding needed.
 
 ## Quick Start (New Machine)
 
@@ -100,7 +68,50 @@ cut -c3- ~/.tmux.conf | sh -s _apply_plugins
 
 Then `prefix + I` should work, and Catppuccin theme will be active.
 
+## Features
+
+### Neovim LSP Support
+
+Enabled via LazyVim extras (`lazyvim.json`):
+
+| Language | Extra | LSP Server |
+|----------|-------|------------|
+| C/C++ | `lang.clangd` | clangd |
+| Rust | `lang.rust` | rust-analyzer |
+| Python | `lang.python` | basedpyright / pyright |
+| Markdown | `lang.markdown` | marksman |
+
+> **clangd tip**: clangd looks for `compile_commands.json` in the project root and `build/` by default. For custom paths, create a `.clangd` file in the project root:
+> ```yaml
+> CompileFlags:
+>   CompilationDatabase: /path/to/build/directory
+> ```
+
+### Seamless Navigation
+
+`C-h/j/k/l` works across both tmux panes and Neovim splits thanks to [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator), configured on both sides.
+
+### Recommended Workflow (SSH)
+
+```
+Ghostty ──SSH──▶ Remote tmux ──▶ nvim + panes
+```
+
+- **Do not nest tmux locally**. Run tmux only on the remote machine so that `C-h/j/k/l` navigation and OSC 52 clipboard work correctly.
+- SSH disconnect → remote tmux session survives. Reconnect with `ssh host` + `tmux attach`.
+- Clipboard is handled by **OSC 52** (terminal-level), no X11 forwarding needed.
+
 ## Cheatsheet
+
+### Ghostty (Terminal Emulator)
+
+| Key | Action |
+|-----|--------|
+| `Alt+\` | Split right (vertical) |
+| `Alt+-` | Split down (horizontal) |
+| `Alt+x` | Close current split |
+| `C-h/j/k/l` | Navigate between Ghostty splits |
+| `Ctrl+Shift+R` | Reset terminal (fix garbled output after SSH disconnect) |
 
 ### Tmux (Oh my tmux!, prefix = `` ` ``)
 
@@ -196,7 +207,8 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 |-----|--------|
 | `C-h/j/k/l` | Navigate between nvim splits & tmux panes (vim-tmux-navigator) |
 | `<leader>-` / `<leader>\` | Split below / right |
-| `<leader>wd` | Close window |
+| `<leader>wx` | Close window (consistent with tmux `prefix+x`) |
+| `<leader>wd` | Close window (LazyVim default) |
 | `<leader>bd` / `<leader>bo` | Delete buffer / delete other buffers |
 | `<S-h>` / `<S-l>` | Previous / next buffer |
 

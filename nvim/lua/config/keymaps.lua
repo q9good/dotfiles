@@ -14,3 +14,6 @@ vim.keymap.set("n", "<C-l>", ":<C-U>TmuxNavigateRight<CR>", { silent = true, des
 
 -- Override vertical split: <leader>\ instead of <leader>| (consistent with tmux prefix + \)
 vim.keymap.set("n", "<leader>\\", "<C-W>v", { desc = "Split Window Right", remap = true })
+
+-- Close window: <leader>wx (consistent with tmux prefix+x and Ghostty Alt+x)
+vim.keymap.set("n", "<leader>wx", "<C-W>c", { desc = "Close Window", remap = true })

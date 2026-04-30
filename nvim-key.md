@@ -51,7 +51,8 @@
 | `<C-Left/Right>` | 减少/增加窗口宽度 | n |
 | `<leader>-` | 水平分割窗口 | n |
 | `<leader>\` | 垂直分割窗口 | n |
-| `<leader>wd` | 关闭窗口 | n |
+| `<leader>wx` | 关闭窗口（与 tmux `prefix+x` 一致） | n |
+| `<leader>wd` | 关闭窗口（LazyVim 默认） | n |
 | `<leader>wm` / `<leader>uZ` | 切换窗口最大化 | n |
 | `<leader>uz` | 切换 Zen 模式 | n |
 | `<leader><tab><tab>` | 新建 tab | n |
