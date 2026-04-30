@@ -83,6 +83,18 @@ install_lazygit_binary() {
     echo "  lazygit installed: $(~/.local/bin/lazygit --version 2>/dev/null | head -1)"
 }
 
+# Install uv (Python package manager)
+install_uv() {
+    if is_installed uv; then
+        echo "  Already installed: uv $(uv --version 2>/dev/null)"
+        return
+    fi
+    echo "  Installing uv..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    # Ensure uv is on PATH for the rest of this script
+    export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+}
+
 # Check if a clipboard tool is available (for tmux-yank)
 has_clipboard_tool() {
     is_installed pbcopy || is_installed xsel || is_installed xclip || is_installed wl-copy
@@ -154,10 +166,15 @@ install_common_tools() {
                 install_lazygit_binary
                 TOOLS_TO_INSTALL="$(echo "$TOOLS_TO_INSTALL" | sed 's/ *lazygit */ /g')"
             fi
-            # ruff: install via pip
+            # ruff: install via uv
             if echo "$TOOLS_TO_INSTALL" | grep -q "ruff"; then
-                echo "  Installing ruff via pip..."
-                pip3 install --user ruff
+                install_uv
+                if is_installed uv; then
+                    echo "  Installing ruff via uv..."
+                    uv tool install ruff
+                else
+                    echo "  [!] uv not available, skipping ruff."
+                fi
                 TOOLS_TO_INSTALL="$(echo "$TOOLS_TO_INSTALL" | sed 's/ *ruff */ /g')"
             fi
             # Tools installable via cargo

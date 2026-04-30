@@ -50,7 +50,7 @@
 | `<C-Up/Down>` | 增加/减少窗口高度 | n |
 | `<C-Left/Right>` | 减少/增加窗口宽度 | n |
 | `<leader>-` | 水平分割窗口 | n |
-| `<leader>\|` | 垂直分割窗口 | n |
+| `<leader>\` | 垂直分割窗口 | n |
 | `<leader>wd` | 关闭窗口 | n |
 | `<leader>wm` / `<leader>uZ` | 切换窗口最大化 | n |
 | `<leader>uz` | 切换 Zen 模式 | n |

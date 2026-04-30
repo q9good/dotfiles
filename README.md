@@ -195,7 +195,7 @@ Then `prefix + I` should work, and Catppuccin theme will be active.
 | Key | Action |
 |-----|--------|
 | `C-h/j/k/l` | Navigate between nvim splits & tmux panes (vim-tmux-navigator) |
-| `<leader>-` / `<leader>\|` | Split below / right |
+| `<leader>-` / `<leader>\` | Split below / right |
 | `<leader>wd` | Close window |
 | `<leader>bd` / `<leader>bo` | Delete buffer / delete other buffers |
 | `<S-h>` / `<S-l>` | Previous / next buffer |

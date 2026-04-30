@@ -11,3 +11,6 @@ vim.keymap.set("n", "<C-h>", ":<C-U>TmuxNavigateLeft<CR>", { silent = true, desc
 vim.keymap.set("n", "<C-j>", ":<C-U>TmuxNavigateDown<CR>", { silent = true, desc = "Navigate Down (tmux/nvim)" })
 vim.keymap.set("n", "<C-k>", ":<C-U>TmuxNavigateUp<CR>", { silent = true, desc = "Navigate Up (tmux/nvim)" })
 vim.keymap.set("n", "<C-l>", ":<C-U>TmuxNavigateRight<CR>", { silent = true, desc = "Navigate Right (tmux/nvim)" })
+
+-- Override vertical split: <leader>\ instead of <leader>| (consistent with tmux prefix + \)
+vim.keymap.set("n", "<leader>\\", "<C-W>v", { desc = "Split Window Right", remap = true })
