@@ -112,7 +112,7 @@ Features: `copy-on-select`, `mouse-shift-capture = false` (prevents garbled mous
 | `Alt+\` | Split right (vertical) |
 | `Alt+-` | Split down (horizontal) |
 | `Alt+x` | Close current split |
-| `C-h/j/k/l` | Navigate between Ghostty splits |
+| `C-h/j/k/l` | Navigate between Ghostty splits (performable, passes through to tmux/nvim) |
 | `Ctrl+Shift+R` | Reset terminal (fix garbled output after SSH disconnect) |
 
 ### Tmux (Oh my tmux!, prefix = `` ` ``)
@@ -130,20 +130,37 @@ Features: `copy-on-select`, `mouse-shift-capture = false` (prevents garbled mous
 | `prefix + $` | Rename session |
 | `prefix + s` | List sessions |
 
-#### Pane
+#### Pane — Create / Navigate / Close
 
 | Key | Action |
 |-----|--------|
 | `prefix + -` | Split horizontally (below) |
 | `prefix + \` | Split vertically (right) |
 | `C-h/j/k/l` | Navigate panes & nvim windows seamlessly (vim-tmux-navigator) |
-| `prefix + q` | Show pane numbers |
+| `prefix + q` | Show pane numbers (then press number to jump) |
+| `prefix + x` | Kill pane |
+
+#### Pane — Move / Swap / Layout
+
+| Key | Action |
+|-----|--------|
+| `prefix + <` / `>` | Swap current pane with previous / next (Oh my tmux!) |
+| `prefix + {` / `}` | Swap current pane with previous / next (tmux native) |
+| `prefix + C-o` | Rotate all panes clockwise |
+| `prefix + M-o` | Rotate all panes counter-clockwise |
+| `prefix + Space` | Cycle through built-in layouts (even-h/v, main-h/v, tiled) |
+| `prefix + !` | Break current pane into a new window |
+| `prefix + @` | Join another window's pane into current window (Oh my tmux!) |
+| `:join-pane -t :2` | Move current pane to window 2 (command mode) |
+
+#### Pane — Resize / Zoom / Misc
+
+| Key | Action |
+|-----|--------|
+| `prefix + H/J/K/L` | Resize pane left/down/up/right (repeatable) |
 | `prefix + z` | Toggle pane zoom (temporary fullscreen, panes still exist) |
 | `prefix + +` | Maximize pane (break to new window, press again to restore — Oh my tmux!) |
-| `prefix + !` | Break pane into a new window (one-way) |
-| `:join-pane -t :2` | Move current pane to window 2 (command mode) |
-| `prefix + <` / `>` | Swap pane up / down |
-| `prefix + x` | Kill pane |
+| `prefix + k` | Clear screen + scrollback (Ctrl+L is taken by vim-tmux-navigator) |
 | `prefix + m` | Toggle mouse on/off |
 | `prefix + S` | Synchronize panes (broadcast input to all panes) |
 | `prefix + A` | Unsynchronize panes |

@@ -432,6 +432,12 @@ bind -T copy-mode-vi C-j select-pane -D
 bind -T copy-mode-vi C-k select-pane -U
 bind -T copy-mode-vi C-l select-pane -R
 
+# -- clear screen --------------------------------------------------------------
+# Ctrl+L is taken by vim-tmux-navigator (move-right), so use prefix + k to
+# clear the visible screen AND the scrollback history (similar to Cmd+K in
+# iTerm2 / Ghostty).
+bind k send-keys -R \; send-keys C-l \; clear-history
+
 # -- tpm -----------------------------------------------------------------------
 
 tmux_conf_update_plugins_on_launch=true

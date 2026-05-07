@@ -9,7 +9,7 @@ copy-on-select = true
 background-image-opacity = 0.75
 mouse-shift-capture = false
 
-# macOS: treat Option key as Alt for keybindings (required for Alt+\ etc.)
+# macOS: treat Option key as Alt for keybindings
 macos-option-as-alt = true
 
 # =============================================
@@ -24,9 +24,8 @@ keybind = alt+minus=new_split:down
 keybind = alt+x=close_surface
 
 # C-h/j/k/l = navigate between Ghostty splits.
-# "performable:" ensures these keys are only consumed when goto_split can
-# actually move focus (i.e. multiple Ghostty splits exist). Otherwise the
-# keypress passes through to the running program (tmux/nvim).
+# "performable:" only consumes the key when goto_split can actually move,
+# otherwise the keypress passes through to tmux/nvim.
 keybind = performable:ctrl+h=goto_split:left
 keybind = performable:ctrl+j=goto_split:down
 keybind = performable:ctrl+k=goto_split:up
