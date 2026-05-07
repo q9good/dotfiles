@@ -7,6 +7,9 @@
 theme = Catppuccin Mocha
 copy-on-select = true
 background-image-opacity = 0.75
+background-opacity = 0.88
+background-blur-radius = 12
+macos-titlebar-style = transparent
 mouse-shift-capture = false
 
 # macOS: treat Option key as Alt for keybindings

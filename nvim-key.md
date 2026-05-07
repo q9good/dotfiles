@@ -138,6 +138,15 @@
 | `<leader>ghd` | Diff This | n |
 | `ih` | 选择 hunk（文本对象） | o, x |
 
+## Yazi（全功能文件管理器）
+
+| 快捷键 | 功能 |
+|--------|------|
+| `<leader>y` | 在当前文件所在目录打开 yazi |
+| `<leader>Y` | 在 cwd 打开 yazi |
+
+> yazi 浮动窗口内操作见 `~/.config/yazi/keymap.toml`；选中文件后回车在 nvim 中打开。
+
 ## Snacks Explorer（文件浏览器）
 
 | 快捷键 | 功能 |

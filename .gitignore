@@ -18,3 +18,12 @@ nvim/debug
 **/foo.*
 **/*.log
 nvim/data
+
+# runtime data / binaries / machine-local configs (not dotfiles)
+a1/
+git/
+go/
+google-chrome-for-testing/
+mimeapps.list
+nvim-linux-x86_64.tar.gz
+pip/
