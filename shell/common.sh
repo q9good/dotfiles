@@ -2,7 +2,7 @@
 # Sourced by ~/.bashrc or ~/.zshrc via install.sh
 
 # Bell notification when a long-running command finishes (>=10s)
-_NOTIFY_THRESHOLD=10
+_NOTIFY_THRESHOLD=8
 
 if [ -n "$ZSH_VERSION" ]; then
     _notify_cmd_start=0
