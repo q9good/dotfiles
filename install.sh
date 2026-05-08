@@ -545,8 +545,9 @@ setup_shell_integration() {
 
 # =============================================
 # Claude Code hooks
-# Installs platform notification tool and wires Stop/Notification hooks
-# into ~/.claude/settings.json so Claude rings when done or needs input.
+# Wires hook.sh into ~/.claude/settings.json for:
+#   UserPromptSubmit, PreToolUse, Stop, Notification
+# hook.sh updates agent-status state files and shows popup notifications.
 # =============================================
 setup_claude_hooks() {
     echo "=== Setting up Claude Code hooks ==="
@@ -556,43 +557,14 @@ setup_claude_hooks() {
         return
     fi
 
-    NOTIFY_SCRIPT="$HOME/.config/shell/claude-notify.sh"
+    HOOK_SCRIPT="$HOME/.config/tmux/agent-status/hooks/hook.sh"
 
-    if [ ! -f "$NOTIFY_SCRIPT" ]; then
-        echo "  [!] Not found: $NOTIFY_SCRIPT — skipping hooks setup."
+    if [ ! -f "$HOOK_SCRIPT" ]; then
+        echo "  [!] Not found: $HOOK_SCRIPT — skipping hooks setup."
         return
     fi
-    chmod +x "$NOTIFY_SCRIPT"
+    chmod +x "$HOOK_SCRIPT"
 
-    # Install platform notification tool
-    case "$OS" in
-        macos)
-            if ! is_installed terminal-notifier; then
-                echo "  Installing terminal-notifier..."
-                install_with_brew terminal-notifier
-            else
-                echo "  Already installed: terminal-notifier"
-            fi
-            ;;
-        ubuntu)
-            if ! is_installed notify-send; then
-                echo "  Installing libnotify-bin..."
-                sudo apt-get install -y libnotify-bin 2>/dev/null || echo "  [!] apt-get failed, skipping notify-send."
-            else
-                echo "  Already installed: notify-send"
-            fi
-            ;;
-        arch)
-            if ! is_installed notify-send; then
-                echo "  Installing libnotify..."
-                install_with_pacman libnotify
-            else
-                echo "  Already installed: notify-send"
-            fi
-            ;;
-    esac
-
-    # Write hooks into ~/.claude/settings.json using jq
     if ! is_installed jq; then
         echo "  [!] jq not found — cannot write settings.json. Install jq first."
         return
@@ -601,26 +573,33 @@ setup_claude_hooks() {
     CLAUDE_SETTINGS="$HOME/.claude/settings.json"
     mkdir -p "$HOME/.claude"
 
-    STOP_CMD="$NOTIFY_SCRIPT Stop"
-    NOTIF_CMD="$NOTIFY_SCRIPT Notification"
-
-    # Only add hooks if our script isn't already referenced
-    if [ -f "$CLAUDE_SETTINGS" ] && grep -qF "$NOTIFY_SCRIPT" "$CLAUDE_SETTINGS" 2>/dev/null; then
+    # Idempotency: skip if hook.sh already wired
+    if [ -f "$CLAUDE_SETTINGS" ] && grep -qF "$HOOK_SCRIPT" "$CLAUDE_SETTINGS" 2>/dev/null; then
         echo "  Hooks already configured: $CLAUDE_SETTINGS"
         return
     fi
 
+    # Build the hook entry for our script (no matcher = all events)
+    hook_entry="{\"hooks\": [{\"type\": \"command\", \"command\": \"$HOOK_SCRIPT\"}]}"
+
     if [ -f "$CLAUDE_SETTINGS" ]; then
-        # Merge: only set Stop/Notification, preserve all other keys
-        jq --arg stop "$STOP_CMD" --arg notif "$NOTIF_CMD" \
-            '.hooks.Stop = [{"hooks": [{"type": "command", "command": $stop}]}]
-           | .hooks.Notification = [{"hooks": [{"type": "command", "command": $notif}]}]' \
-            "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp" && mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
+        # Merge: set UserPromptSubmit + Stop + Notification to our hook.
+        # For PreToolUse: append to existing array (preserves AoneAgent hook).
+        jq --argjson entry "$hook_entry" '
+            .hooks.UserPromptSubmit = [$entry]
+          | .hooks.Stop             = [$entry]
+          | .hooks.Notification     = [$entry]
+          | .hooks.PreToolUse       = ((.hooks.PreToolUse // []) + [$entry]
+                                       | unique_by(.hooks[0].command))
+        ' "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp" \
+        && mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
     else
-        jq -n --arg stop "$STOP_CMD" --arg notif "$NOTIF_CMD" '{
+        jq -n --argjson entry "$hook_entry" '{
             "hooks": {
-                "Stop": [{"hooks": [{"type": "command", "command": $stop}]}],
-                "Notification": [{"hooks": [{"type": "command", "command": $notif}]}]
+                "UserPromptSubmit": [$entry],
+                "PreToolUse":       [$entry],
+                "Stop":             [$entry],
+                "Notification":     [$entry]
             }
         }' > "$CLAUDE_SETTINGS"
     fi

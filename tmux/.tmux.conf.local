@@ -392,9 +392,8 @@ set -as terminal-features ",xterm-256color:RGB"
 set -g monitor-activity off
 set -g visual-activity off
 
-# toggle notify-when-done: press prefix+N before a long command
-# tmux will bell when the pane goes silent for 10s (command finished)
-bind N if -F '#{monitor-silence}' \
+# toggle monitor-silence (moved from N, which is now next-done agent session)
+bind C-n if -F '#{monitor-silence}' \
   'setw monitor-silence 0 ; display "notify off"' \
   'setw monitor-silence 10 ; display "notify on (10s silence)"'
 
@@ -417,8 +416,10 @@ bind \\ split-window -h -c "#{pane_current_path}"
 bind - split-window -v -c "#{pane_current_path}"
 
 # synchronize panes (broadcast input to all panes)
-bind S setw synchronize-panes on \; display "Panes synchronized"
-bind A setw synchronize-panes off \; display "Panes unsynchronized"
+# Pane sync toggle (prefix+Y, replaces old prefix+S / prefix+A)
+bind Y if -F '#{pane_synchronized}' \
+  'setw synchronize-panes off ; display "Panes unsynchronized"' \
+  'setw synchronize-panes on  ; display "Panes synchronized"'
 
 # display a message after toggling mouse support
 bind m run "cut -c3- '#{TMUX_CONF}' | sh -s _toggle_mouse" \; display 'mouse #{?#{mouse},on,off}'
@@ -484,7 +485,10 @@ set-option -g @catppuccin_flavor 'mocha'
 set-environment -g TMUX_PLUGIN_MANAGER_PATH "$HOME/.tmux/plugins"
 run -b 'sleep 5 && tmux set -g @tpm_plugins "tmux-plugins/tpm tmux-plugins/tmux-yank catppuccin/tmux" && [ -f "$HOME/.tmux/plugins/tpm/tpm" ] && "$HOME/.tmux/plugins/tpm/tpm"'
 
-# -- custom variables ----------------------------------------------------------
+# -- agent-status plugin -------------------------------------------------------
+# Keybindings: prefix+S (session switcher), prefix+N (next done session)
+# Status bar: ⚡N ✓N ⏱[win] appended to status-right
+run-shell "$HOME/.config/tmux/agent-status/agent-status.tmux"
 
 # to define a custom #{foo} variable, define a POSIX shell function between the
 # '# EOF' and the '# "$@"' lines. Please note that the opening brace { character

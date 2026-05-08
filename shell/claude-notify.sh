@@ -34,5 +34,10 @@ if [ -n "$DISPLAY" ] || [ -n "$WAYLAND_DISPLAY" ]; then
     exit 0
 fi
 
-# SSH / headless: bell travels through SSH → tmux → Ghostty
-printf '\a'
+# SSH / headless: write bell directly to controlling terminal (bypasses stdout redirect)
+printf '\a' > /dev/tty 2>/dev/null || printf '\a'
+# In tmux: show window-aware message in the status bar
+if [ -n "$TMUX" ]; then
+    WIN="$(tmux display-message -p '#I:#W' 2>/dev/null)"
+    tmux display-message "[$WIN] $MESSAGE"
+fi

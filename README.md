@@ -4,7 +4,7 @@ Personal dotfiles managed in `~/.config`, including configurations for:
 
 - **ghostty** — [Ghostty](https://ghostty.org/) terminal emulator configuration (splits, navigation, terminal reset)
 - **nvim** — [LazyVim](https://www.lazyvim.org/) based Neovim configuration with Catppuccin Mocha theme
-- **tmux** — [Oh my tmux!](https://github.com/gpakosz/.tmux) with Catppuccin Mocha theme, vim-tmux-navigator, tpm plugins
+- **tmux** — [Oh my tmux!](https://github.com/gpakosz/.tmux) with Catppuccin Mocha theme, vim-tmux-navigator, tpm plugins, agent-status notifications
 - **fish** — Fish shell configuration
 - **yazi** — Terminal file manager with plugins (smart-enter, full-border, git, chmod, diff, etc.)
 - **htop** — System monitor configuration
@@ -130,6 +130,35 @@ Features: `copy-on-select`, `mouse-shift-capture = false` (prevents garbled mous
 | `prefix + $` | Rename session |
 | `prefix + s` | List sessions |
 
+#### Agent Status & Notifications
+
+Tracks Claude Code agents and long-running shell commands (≥ 8 s) across all tmux sessions. Status is shown in the right side of the status bar.
+
+| Status bar | Meaning |
+|-----------|---------|
+| `⚡N` | N sessions with Claude actively working |
+| `✓N` | N sessions where Claude just finished |
+| `⏸N` | N sessions waiting for user input |
+| `⏱[win]` | Long shell command recently completed in window `win` |
+
+When an event triggers, a small popup appears in the **top-right corner**:
+
+| Popup icon | Event | Auto-close |
+|-----------|-------|-----------|
+| `▲ ▲` DONE | Claude task finished | 5 s |
+| `▓ ▓` APPROVE? | Claude waiting for tool permission | 10 s |
+| `⏱ ⏱` `bash 42s` | Shell command finished (≥ 8 s) | 5 s |
+
+Press **Enter** inside a popup to jump to the triggering window. Press **q** to dismiss early.
+The popup is silently skipped when you are already viewing the triggering window.
+
+| Key | Action |
+|-----|--------|
+| `prefix + S` | **Agent session switcher** — fzf popup listing all sessions with ⚡/✓/⏸ status |
+| `prefix + N` | **Jump to next Done session** — switches to the first session where Claude just finished |
+| `prefix + Y` | Toggle pane synchronization on/off (was `prefix+S` / `prefix+A`) |
+| `prefix + C-n` | Toggle monitor-silence notify (was `prefix+N`) |
+
 #### Pane — Create / Navigate / Close
 
 | Key | Action |
@@ -162,8 +191,7 @@ Features: `copy-on-select`, `mouse-shift-capture = false` (prevents garbled mous
 | `prefix + +` | Maximize pane (break to new window, press again to restore — Oh my tmux!) |
 | `prefix + k` | Clear screen + scrollback (Ctrl+L is taken by vim-tmux-navigator) |
 | `prefix + m` | Toggle mouse on/off |
-| `prefix + S` | Synchronize panes (broadcast input to all panes) |
-| `prefix + A` | Unsynchronize panes |
+| `prefix + S` | Agent session switcher (see Agent Status section above) |
 
 #### Plugins & Config
 
