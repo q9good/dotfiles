@@ -6,7 +6,7 @@ _NOTIFY_THRESHOLD=10
 
 if [ -n "$ZSH_VERSION" ]; then
     _notify_cmd_start=0
-    _notify_preexec() { _notify_cmd_start=$SECONDS }
+    _notify_preexec() { _notify_cmd_start=$SECONDS; }
     _notify_precmd() {
         if (( _notify_cmd_start > 0 )); then
             (( SECONDS - _notify_cmd_start >= _NOTIFY_THRESHOLD )) && printf '\a'
