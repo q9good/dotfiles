@@ -11,6 +11,7 @@ background-opacity = 0.88
 background-blur-radius = 12
 macos-titlebar-style = transparent
 mouse-shift-capture = false
+bell-feature = audible
 
 # macOS: treat Option key as Alt for keybindings
 macos-option-as-alt = true

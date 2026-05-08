@@ -492,13 +492,32 @@ setup_shell_integration() {
     COMMON_SH="$HOME/.config/shell/common.sh"
     COMMON_FISH="$HOME/.config/shell/common.fish"
 
-    # bash
+    # bash (interactive non-login shells)
     if [ -f "$HOME/.bashrc" ]; then
         if ! grep -qF "$COMMON_SH" "$HOME/.bashrc"; then
             printf '\n# dotfiles shared config\n[ -f "%s" ] && . "%s"\n' "$COMMON_SH" "$COMMON_SH" >> "$HOME/.bashrc"
             echo "  Added to ~/.bashrc"
         else
             echo "  Already present: ~/.bashrc"
+        fi
+    fi
+
+    # bash login shells: ensure .bash_profile or .profile sources .bashrc
+    # SSH sessions load .bash_profile (if exists) or .profile, skipping .bashrc
+    BASHRC_SOURCE_LINE='[ -f "$HOME/.bashrc" ] && . "$HOME/.bashrc"'
+    if [ -f "$HOME/.bash_profile" ]; then
+        if ! grep -qF '.bashrc' "$HOME/.bash_profile"; then
+            printf '\n# Source .bashrc for login shells\n%s\n' "$BASHRC_SOURCE_LINE" >> "$HOME/.bash_profile"
+            echo "  Added .bashrc sourcing to ~/.bash_profile"
+        else
+            echo "  Already present: ~/.bash_profile"
+        fi
+    elif [ -f "$HOME/.profile" ]; then
+        if ! grep -qF '.bashrc' "$HOME/.profile"; then
+            printf '\n# Source .bashrc for login shells\n%s\n' "$BASHRC_SOURCE_LINE" >> "$HOME/.profile"
+            echo "  Added .bashrc sourcing to ~/.profile"
+        else
+            echo "  Already present: ~/.profile"
         fi
     fi
 
