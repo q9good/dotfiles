@@ -531,11 +531,10 @@ setup_shell_integration() {
         fi
     fi
 
-    # fish
+    # fish — only if fish is installed AND config already exists (don't create it)
     FISH_CONFIG="$HOME/.config/fish/config.fish"
-    if command -v fish >/dev/null 2>&1 || [ -f "$FISH_CONFIG" ]; then
-        mkdir -p "$(dirname "$FISH_CONFIG")"
-        if ! grep -qF "$COMMON_FISH" "$FISH_CONFIG" 2>/dev/null; then
+    if command -v fish >/dev/null 2>&1 && [ -f "$FISH_CONFIG" ]; then
+        if ! grep -qF "$COMMON_FISH" "$FISH_CONFIG"; then
             printf '\n# dotfiles shared config\ntest -f "%s" && source "%s"\n' "$COMMON_FISH" "$COMMON_FISH" >> "$FISH_CONFIG"
             echo "  Added to $FISH_CONFIG"
         else
