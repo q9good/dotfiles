@@ -485,6 +485,47 @@ install_nvim_image_tools() {
 }
 
 # =============================================
+# Shell integration
+# =============================================
+setup_shell_integration() {
+    echo "=== Setting up shell integration ==="
+    COMMON_SH="$HOME/.config/shell/common.sh"
+    COMMON_FISH="$HOME/.config/shell/common.fish"
+
+    # bash
+    if [ -f "$HOME/.bashrc" ]; then
+        if ! grep -qF "$COMMON_SH" "$HOME/.bashrc"; then
+            printf '\n# dotfiles shared config\n[ -f "%s" ] && . "%s"\n' "$COMMON_SH" "$COMMON_SH" >> "$HOME/.bashrc"
+            echo "  Added to ~/.bashrc"
+        else
+            echo "  Already present: ~/.bashrc"
+        fi
+    fi
+
+    # zsh
+    if [ -f "$HOME/.zshrc" ]; then
+        if ! grep -qF "$COMMON_SH" "$HOME/.zshrc"; then
+            printf '\n# dotfiles shared config\n[ -f "%s" ] && . "%s"\n' "$COMMON_SH" "$COMMON_SH" >> "$HOME/.zshrc"
+            echo "  Added to ~/.zshrc"
+        else
+            echo "  Already present: ~/.zshrc"
+        fi
+    fi
+
+    # fish
+    FISH_CONFIG="$HOME/.config/fish/config.fish"
+    if command -v fish >/dev/null 2>&1 || [ -f "$FISH_CONFIG" ]; then
+        mkdir -p "$(dirname "$FISH_CONFIG")"
+        if ! grep -qF "$COMMON_FISH" "$FISH_CONFIG" 2>/dev/null; then
+            printf '\n# dotfiles shared config\ntest -f "%s" && source "%s"\n' "$COMMON_FISH" "$COMMON_FISH" >> "$FISH_CONFIG"
+            echo "  Added to $FISH_CONFIG"
+        else
+            echo "  Already present: $FISH_CONFIG"
+        fi
+    fi
+}
+
+# =============================================
 # Main
 # =============================================
 detect_os
@@ -495,6 +536,7 @@ install_yazi_plugins
 configure_tmux
 install_tpm
 install_nvim_image_tools
+setup_shell_integration
 
 echo ""
 echo "=== All done! ==="

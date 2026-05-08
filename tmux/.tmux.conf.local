@@ -388,6 +388,16 @@ set -g default-terminal "tmux-256color"
 set -as terminal-overrides ",xterm-256color:Tc"
 set -as terminal-features ",xterm-256color:RGB"
 
+# disable activity monitoring to avoid false bell notifications
+set -g monitor-activity off
+set -g visual-activity off
+
+# toggle notify-when-done: press prefix+N before a long command
+# tmux will bell when the pane goes silent for 10s (command finished)
+bind N if -F '#{monitor-silence}' \
+  'setw monitor-silence 0 ; display "notify off"' \
+  'setw monitor-silence 10 ; display "notify on (10s silence)"'
+
 # start with mouse mode enabled
 set -g mouse on
 
