@@ -383,6 +383,11 @@ tmux_conf_urlscan_options="--compact --dedupe"
 # increase history size
 #set -g history-limit 10000
 
+# true color + background transparency passthrough
+set -g default-terminal "tmux-256color"
+set -as terminal-overrides ",xterm-256color:Tc"
+set -as terminal-features ",xterm-256color:RGB"
+
 # start with mouse mode enabled
 set -g mouse on
 
