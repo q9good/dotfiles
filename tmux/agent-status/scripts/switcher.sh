@@ -46,12 +46,12 @@ generate_lines() {
             [ -z "$widx" ] && continue
 
             win_parts=()
-            while IFS= read -r pane_id; do
+            while IFS=$'\t' read -r pane_id pane_cmd; do
                 local cs; cs=$(fmt_pane_claude "$sess" "$pane_id")
                 [ -n "$cs" ] && win_parts+=("$cs")
-                local ss; ss=$(fmt_pane_shell "$sess" "$pane_id")
+                local ss; ss=$(fmt_pane_shell "$sess" "$pane_id" "$pane_cmd")
                 [ -n "$ss" ] && win_parts+=("$ss")
-            done < <(tmux list-panes -t "${sess}:${widx}" -F '#{pane_id}' 2>/dev/null)
+            done < <(tmux list-panes -t "${sess}:${widx}" -F "#{pane_id}	#{pane_current_command}" 2>/dev/null)
 
             cur_mark=""
             [ "$sess" = "$current_session" ] && [ "$widx" = "$current_window" ] && cur_mark=" ●"

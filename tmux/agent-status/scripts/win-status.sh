@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # win-status.sh — compact per-window status for tmux window-status-format
 # Args: session_name window_index
-# Output: " ⚙Bash 2m" / " ⚡ 45s" / " ⏸" / " ✓" / " ▶cmd"  (or empty)
+# Output: " ⚙Bash 2m" / " ⚡ 45s" / " ⏸" / " ✓" / " zsh▶make"  (or empty)
 
 sess="$1"
 widx="$2"
@@ -15,11 +15,13 @@ now=$(date +%s)
 claude_out=""
 shell_out=""
 
-while IFS= read -r pane_id; do
+# Fetch pane_id and pane_current_command together to avoid extra tmux calls
+# inside #(...) subprocesses where TMUX env may be absent.
+while IFS=$'\t' read -r pane_id pane_cmd; do
     [ -z "$claude_out" ] && claude_out=$(fmt_pane_claude "$sess" "$pane_id")
-    [ -z "$shell_out" ]  && shell_out=$(fmt_pane_shell  "$sess" "$pane_id")
+    [ -z "$shell_out" ]  && shell_out=$(fmt_pane_shell  "$sess" "$pane_id" "$pane_cmd")
     [ -n "$claude_out" ] && [ -n "$shell_out" ] && break
-done < <(tmux list-panes -t "${sess}:${widx}" -F '#{pane_id}' 2>/dev/null)
+done < <(tmux list-panes -t "${sess}:${widx}" -F "#{pane_id}	#{pane_current_command}" 2>/dev/null)
 
 out="${claude_out}${claude_out:+${shell_out:+ }}${shell_out}"
 [ -n "$out" ] && printf ' %s' "$out"

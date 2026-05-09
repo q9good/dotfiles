@@ -26,7 +26,7 @@ function _as_write_running
     test -z "$sess"; and return
     mkdir -p $_AS_SHELL_DIR
     set cmd_short (string sub -l 20 (string split ' ' $cmd)[1])
-    printf '%s:%s\n' "$cmd_short" (date +%s) \
+    printf '%s:%s:%s\n' "fish" "$cmd_short" (date +%s) \
         > "$_AS_SHELL_DIR/${sess}_${TMUX_PANE}.running" 2>/dev/null
 end
 

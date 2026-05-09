@@ -27,7 +27,7 @@ done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null)
 shell_running=0
 for rf in "$SHELL_DIR/"*.running; do
     [ -f "$rf" ] || continue
-    IFS=':' read -r _cmd start_ts < "$rf"
+    IFS=':' read -r _shell _cmd start_ts < "$rf"
     [ -n "$start_ts" ] || continue
     age=$(( now - start_ts ))
     (( age >= 3 )) && (( shell_running++ ))

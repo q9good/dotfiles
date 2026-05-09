@@ -32,12 +32,13 @@ CY=$'\033[36m'
 colorize() {
     local s="$1"
     case "$s" in
-        ⚙*)  printf '%s%s%s' "$YL" "$s" "$R" ;;
-        ⚡*)  printf '%s%s%s' "$YL" "$s" "$R" ;;
-        ⏸*)  printf '%s%s%s' "$RD" "$s" "$R" ;;
-        ✓*)   printf '%s%s%s' "$GN" "$s" "$R" ;;
-        ▶*)   printf '%s%s%s' "$BL" "$s" "$R" ;;
-        *)    printf '%s' "$s" ;;
+        ⚙*)           printf '%s%s%s' "$YL" "$s" "$R" ;;
+        ⚡*)           printf '%s%s%s' "$YL" "$s" "$R" ;;
+        ⏸*)           printf '%s%s%s' "$RD" "$s" "$R" ;;
+        ✓*)            printf '%s%s%s' "$GN" "$s" "$R" ;;
+        *▶*)           printf '%s%s%s' "$BL" "$s" "$R" ;;  # zsh▶make or ▶cmd
+        bash|zsh|fish) printf '%s%s%s' "$DIM" "$s" "$R" ;;  # idle shell
+        *)             printf '%s' "$s" ;;
     esac
 }
 
@@ -58,12 +59,12 @@ while IFS= read -r sess; do
         [ -z "$widx" ] && continue
 
         win_parts=()
-        while IFS= read -r pane_id; do
+        while IFS=$'\t' read -r pane_id pane_cmd; do
             local cs; cs=$(fmt_pane_claude "$sess" "$pane_id")
             [ -n "$cs" ] && win_parts+=("$(colorize "$cs")")
-            local ss; ss=$(fmt_pane_shell "$sess" "$pane_id")
+            local ss; ss=$(fmt_pane_shell "$sess" "$pane_id" "$pane_cmd")
             [ -n "$ss" ] && win_parts+=("$(colorize "$ss")")
-        done < <(tmux list-panes -t "${sess}:${widx}" -F '#{pane_id}' 2>/dev/null)
+        done < <(tmux list-panes -t "${sess}:${widx}" -F "#{pane_id}	#{pane_current_command}" 2>/dev/null)
 
         if [ "${#win_parts[@]}" -gt 0 ]; then
             status_str=$(IFS=' '; printf '%s' "${win_parts[*]}")

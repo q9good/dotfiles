@@ -25,9 +25,11 @@ _as_write_running() {
     local sess
     sess=$(tmux display-message -p '#{session_name}' 2>/dev/null) || return
     mkdir -p "$_AS_SHELL_DIR"
-    # cmd:start_ts  (cmd truncated to 20 chars, first word only)
+    # shell:cmd:start_ts  (cmd truncated to 20 chars, first word only)
     local cmd_short="${cmd%% *}"; cmd_short="${cmd_short:0:20}"
-    printf '%s:%s\n' "$cmd_short" "$(date +%s)" \
+    local shell_type="bash"
+    [ -n "$ZSH_VERSION" ] && shell_type="zsh"
+    printf '%s:%s:%s\n' "$shell_type" "$cmd_short" "$(date +%s)" \
         > "$_AS_SHELL_DIR/${sess}_${TMUX_PANE}.running" 2>/dev/null
 }
 

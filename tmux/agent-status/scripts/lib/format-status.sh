@@ -38,14 +38,30 @@ fmt_pane_claude() {
     esac
 }
 
-# fmt_pane_shell SESS PANE_ID
-# Print shell running status for one pane: "▶npm 30s" | (nothing)
+# fmt_pane_shell SESS PANE_ID [PANE_CMD]
+# Print shell type and status:
+#   running: "zsh▶make 30s"
+#   idle:    "bash" / "zsh" / "fish"
+#   non-shell pane: (nothing)
+# PANE_CMD (optional): #{pane_current_command} pre-fetched by caller to avoid
+# extra tmux calls in #(...) format-string subprocesses where TMUX may be unset.
 fmt_pane_shell() {
     local sess="$1" pane_id="$2"
     local rf="$SHELL_DIR/${sess}_${pane_id}.running"
-    [ -f "$rf" ] || return
-    local cmd start_ts
-    IFS=':' read -r cmd start_ts < "$rf"
-    local age=$(( now - start_ts ))
-    (( age >= 3 )) && printf '▶%s %s' "$cmd" "$(fmt_elapsed "$start_ts")"
+    if [ -f "$rf" ]; then
+        local shell_type cmd start_ts
+        IFS=':' read -r shell_type cmd start_ts < "$rf"
+        local age=$(( now - start_ts ))
+        if (( age >= 3 )); then
+            printf '%s▶%s %s' "$shell_type" "$cmd" "$(fmt_elapsed "$start_ts")"
+            return
+        fi
+    fi
+    # Idle: use caller-supplied pane_cmd, or query tmux as fallback
+    local pane_cmd="${3:-}"
+    [ -z "$pane_cmd" ] && \
+        pane_cmd=$(tmux display-message -t "${pane_id}" -p '#{pane_current_command}' 2>/dev/null)
+    case "$pane_cmd" in
+        bash|zsh|fish) printf '%s' "$pane_cmd" ;;
+    esac
 }
