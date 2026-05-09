@@ -614,6 +614,35 @@ setup_claude_hooks() {
 }
 
 # =============================================
+# Zsh / oh-my-zsh tuning
+# Disable async git prompt — it races with SIGWINCH on tmux pane split,
+# causing prompt rendering corruption (duplicate lines, wrong cursor pos).
+# The zstyle must appear BEFORE `source $ZSH/oh-my-zsh.sh` to take effect.
+# =============================================
+configure_zsh_omz() {
+    echo "=== Configuring zsh (oh-my-zsh) ==="
+    ZSHRC="$HOME/.zshrc"
+
+    if [ ! -f "$ZSHRC" ]; then
+        echo "  ~/.zshrc not found — skipping."
+        return
+    fi
+
+    if ! grep -q 'oh-my-zsh.sh' "$ZSHRC"; then
+        echo "  oh-my-zsh not detected — skipping."
+        return
+    fi
+
+    if grep -qF "async-prompt" "$ZSHRC"; then
+        echo "  async-prompt already configured."
+        return
+    fi
+
+    sed -i '/source.*oh-my-zsh\.sh/i\# Disable async git prompt (causes display corruption on tmux pane split)\nzstyle '"'"':omz:alpha:lib:git'"'"' async-prompt no' "$ZSHRC"
+    echo "  Added: zstyle ':omz:alpha:lib:git' async-prompt no"
+}
+
+# =============================================
 # Main
 # =============================================
 detect_os
@@ -625,6 +654,7 @@ configure_tmux
 install_tpm
 install_nvim_image_tools
 setup_shell_integration
+configure_zsh_omz
 setup_claude_hooks
 
 echo ""
