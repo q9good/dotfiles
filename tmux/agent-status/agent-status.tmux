@@ -11,6 +11,7 @@ chmod +x \
     "$CURRENT_DIR/scripts/notify-shell.sh" \
     "$CURRENT_DIR/scripts/status-line.sh" \
     "$CURRENT_DIR/scripts/switcher.sh" \
+    "$CURRENT_DIR/scripts/win-status.sh" \
     "$CURRENT_DIR/scripts/lib/next-done.sh" \
     "$CURRENT_DIR/scripts/lib/session-preview.sh" \
     "$CURRENT_DIR/scripts/lib/state.sh" \
