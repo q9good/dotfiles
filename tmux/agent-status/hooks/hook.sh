@@ -79,7 +79,8 @@ case "$hook_type" in
     Notification)
         msg=$(json_val "$input" "message")
         # Notification fires for both permission requests ("to use X") and
-        # general idle alerts ("task complete"). Only set wait for the former.
+        # general idle alerts (task-complete). The latter is already handled
+        # by Stop (bell + popup), so we only act on permission requests.
         if printf '%s' "$msg" | grep -qi "to use"; then
             set_pane_status "wait"
             aggregate_session
@@ -87,8 +88,6 @@ case "$hook_type" in
             label="APPROVE?"
             [[ "$msg" =~ to\ use\ (.+) ]] && label="${BASH_REMATCH[1]}?"
             "$SCRIPT_DIR/../scripts/popup.sh" --state=permission --label="$label" --pane="$PANE_ID" &
-        else
-            ( printf '\a' > /dev/tty ) 2>/dev/null || printf '\a'
         fi
         ;;
 esac
