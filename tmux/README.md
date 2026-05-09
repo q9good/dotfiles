@@ -132,7 +132,7 @@ fzf popup showing all sessions and their windows with live status. Each window l
 
 A small popup appears top-right when:
 - **Claude finishes** (`Stop`) — green `▲ ▲`, auto-dismisses in 5 s, skipped if you're already viewing that window
-- **Permission needed** (`Notification: "to use …"`) — red `▓ ▓`, auto-dismisses in 10 s, always shown
+- **Permission / input needed** (`Notification`) — red `▓ ▓`, auto-dismisses in 10 s, always shown (unless Claude is already done)
 - **Long shell command done** — blue `⏱`, auto-dismisses in 5 s
 
 Press `↵` to jump to the window, `q` to dismiss.
@@ -151,7 +151,7 @@ source ~/.config/shell/common.sh
 source ~/.config/shell/common.fish
 ```
 
-Commands running for ≥ 8 s trigger a notification when they finish. The threshold is set by `AS_NOTIFY_THRESHOLD` (default 8).
+Commands running for ≥ 8 s trigger a notification when they finish. The threshold is set by `_NOTIFY_THRESHOLD` (default 8).
 
 ### Claude Code hooks
 
@@ -163,8 +163,7 @@ Registered in `~/.claude/settings.json`. The hook script is `agent-status/hooks/
 | `PreToolUse` | Set pane → working, record tool name |
 | `PostToolUse` | Clear tool name (show ⚡ not ⚙Tool) |
 | `Stop` | Set pane → done, ring bell, show popup |
-| `Notification` (permission) | Set pane → wait, ring bell, show popup |
-| `Notification` (needs input) | Set pane → wait, ring bell, show popup |
+| `Notification` (active) | Set pane → wait, ring bell, show popup |
 | `Notification` (after done) | Ring bell only |
 
 State files live in `~/.cache/agent-status/`:

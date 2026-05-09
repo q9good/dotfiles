@@ -8,6 +8,7 @@ source "$SCRIPT_DIR/state.sh"
 source "$SCRIPT_DIR/format-status.sh"
 
 now=$(date +%s)
+TAB=$'\t'
 
 # Extract session (and optional window) from target
 if [[ "$TARGET" == *:* ]]; then
@@ -73,7 +74,7 @@ while IFS= read -r sess; do
             printf '  %s  %s\n' "$widx" "$wname"
         fi
 
-    done < <(tmux list-windows -t "$sess" -F "#{window_index}$'\t'#{window_name}" 2>/dev/null)
+    done < <(tmux list-windows -t "$sess" -F "#{window_index}${TAB}#{window_name}" 2>/dev/null)
 
     printf '\n'
 done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null)

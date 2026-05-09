@@ -416,10 +416,7 @@ bind \\ split-window -h -c "#{pane_current_path}"
 bind - split-window -v -c "#{pane_current_path}"
 
 # synchronize panes (broadcast input to all panes)
-# On unsync: reset terminal + redraw prompt in every pane to fix stale state
-bind A if -F '#{?pane_synchronized,1,}' \
-  'setw synchronize-panes off ; run-shell "for p in $(tmux list-panes -F \"#\{pane_id\}\"); do tmux send-keys -t \$p -R C-l; done"' \
-  'setw synchronize-panes on'
+bind A setw synchronize-panes
 
 # display a message after toggling mouse support
 bind m run "cut -c3- '#{TMUX_CONF}' | sh -s _toggle_mouse" \; display 'mouse #{?#{mouse},on,off}'

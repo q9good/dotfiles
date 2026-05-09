@@ -63,16 +63,13 @@ run_with_timeout() {
     # Disable set -e locally so non-zero exits/timeout don't abort the whole script
     set +e
     if command -v timeout >/dev/null 2>&1; then
-        # Use timeout with SIGKILL to force-kill the entire process tree
-        # First check if timeout supports --signal option
         if timeout --help 2>&1 | grep -q -- '--signal'; then
             timeout --signal=KILL "$_rt_secs" "$@"
         else
-            # Fallback: use -s KILL syntax (older timeout versions)
             timeout -s KILL "$_rt_secs" "$@"
         fi
+        _rt_ret=$?
     else
-        # Fallback for systems without 'timeout' (e.g. macOS without coreutils)
         "$@" &
         _rt_pid=$!
         ( sleep "$_rt_secs" && kill -TERM "$_rt_pid" 2>/dev/null && sleep 2 && kill -9 "$_rt_pid" 2>/dev/null || true ) &
@@ -82,7 +79,6 @@ run_with_timeout() {
         kill "$_rt_wdog" 2>/dev/null || true
         wait "$_rt_wdog" 2>/dev/null || true
     fi
-    _rt_ret=$?
     # Map SIGKILL (137) and standard timeout (124) to our timeout code (124)
     if [ "$_rt_ret" -eq 137 ] || [ "$_rt_ret" -eq 124 ]; then
         echo "  [!] Command timed out after ${_rt_secs}s"
@@ -614,35 +610,6 @@ setup_claude_hooks() {
 }
 
 # =============================================
-# Zsh / oh-my-zsh tuning
-# Disable async git prompt — it races with SIGWINCH on tmux pane split,
-# causing prompt rendering corruption (duplicate lines, wrong cursor pos).
-# The zstyle must appear BEFORE `source $ZSH/oh-my-zsh.sh` to take effect.
-# =============================================
-configure_zsh_omz() {
-    echo "=== Configuring zsh (oh-my-zsh) ==="
-    ZSHRC="$HOME/.zshrc"
-
-    if [ ! -f "$ZSHRC" ]; then
-        echo "  ~/.zshrc not found — skipping."
-        return
-    fi
-
-    if ! grep -q 'oh-my-zsh.sh' "$ZSHRC"; then
-        echo "  oh-my-zsh not detected — skipping."
-        return
-    fi
-
-    if grep -qF "async-prompt" "$ZSHRC"; then
-        echo "  async-prompt already configured."
-        return
-    fi
-
-    sed -i '/source.*oh-my-zsh\.sh/i\# Disable async git prompt (causes display corruption on tmux pane split)\nzstyle '"'"':omz:alpha:lib:git'"'"' async-prompt no' "$ZSHRC"
-    echo "  Added: zstyle ':omz:alpha:lib:git' async-prompt no"
-}
-
-# =============================================
 # Main
 # =============================================
 detect_os
@@ -654,7 +621,6 @@ configure_tmux
 install_tpm
 install_nvim_image_tools
 setup_shell_integration
-configure_zsh_omz
 setup_claude_hooks
 
 echo ""

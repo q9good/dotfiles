@@ -21,10 +21,7 @@ chmod +x \
 # ── Key bindings ──────────────────────────────────────────────────────────────
 #
 # prefix+S  Agent session/window switcher (fzf, shows session+window tree)
-#           Previously: synchronize panes (moved to prefix+C-s in tmux.conf.local)
-#
 # prefix+N  Jump to next "done" agent session
-#           Previously: monitor-silence toggle (moved to prefix+C-n)
 
 tmux bind-key S display-popup \
     -E \
