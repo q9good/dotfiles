@@ -24,7 +24,7 @@ Built on [Oh my tmux!](https://github.com/gpakosz/.tmux) with Catppuccin Mocha t
 | `prefix + z` | Zoom / unzoom pane |
 | `prefix + q` | Show pane numbers |
 | `prefix + x` | Kill pane (with confirm) |
-| `prefix + C-s` | Toggle pane synchronization |
+| `prefix + A` | Toggle pane synchronization |
 | `prefix + k` | Clear screen + scrollback history |
 
 Pane navigation also works seamlessly with Neovim via **vim-tmux-navigator**: `Ctrl+h/j/k/l` move between tmux panes and nvim splits without needing the prefix.
@@ -164,7 +164,8 @@ Registered in `~/.claude/settings.json`. The hook script is `agent-status/hooks/
 | `PostToolUse` | Clear tool name (show ⚡ not ⚙Tool) |
 | `Stop` | Set pane → done, ring bell, show popup |
 | `Notification` (permission) | Set pane → wait, ring bell, show popup |
-| `Notification` (idle) | Ring bell only |
+| `Notification` (needs input) | Set pane → wait, ring bell, show popup |
+| `Notification` (after done) | Ring bell only |
 
 State files live in `~/.cache/agent-status/`:
 

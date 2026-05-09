@@ -78,15 +78,16 @@ case "$hook_type" in
 
     Notification)
         msg=$(json_val "$input" "message")
-        if printf '%s' "$msg" | grep -qi "to use"; then
+        current=$(cat "$PANE_DIR/${TMUX_SESSION}_${PANE_ID}.status" 2>/dev/null)
+        ( printf '\a' > /dev/tty ) 2>/dev/null || printf '\a'
+        if [ "$current" != "done" ]; then
             set_pane_status "wait"
             aggregate_session
-            ( printf '\a' > /dev/tty ) 2>/dev/null || printf '\a'
-            label="APPROVE?"
-            [[ "$msg" =~ to\ use\ (.+) ]] && label="${BASH_REMATCH[1]}?"
+            label="INPUT?"
+            if [[ "$msg" =~ to\ use\ (.+) ]]; then
+                label="${BASH_REMATCH[1]}?"
+            fi
             "$SCRIPT_DIR/../scripts/popup.sh" --state=permission --label="$label" --pane="$PANE_ID" &
-        else
-            ( printf '\a' > /dev/tty ) 2>/dev/null || printf '\a'
         fi
         ;;
 esac

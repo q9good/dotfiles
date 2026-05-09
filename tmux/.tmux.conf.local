@@ -416,10 +416,7 @@ bind \\ split-window -h -c "#{pane_current_path}"
 bind - split-window -v -c "#{pane_current_path}"
 
 # synchronize panes (broadcast input to all panes)
-# prefix+C-s: C-s is free (explicitly unbound), unambiguous unlike uppercase Y
-bind C-s if -F '#{?pane_synchronized,1,}' \
-  'setw synchronize-panes off ; display "Panes unsynchronized"' \
-  'setw synchronize-panes on  ; display "Panes synchronized"'
+bind A setw synchronize-panes
 
 # display a message after toggling mouse support
 bind m run "cut -c3- '#{TMUX_CONF}' | sh -s _toggle_mouse" \; display 'mouse #{?#{mouse},on,off}'
