@@ -12,6 +12,7 @@ chmod +x \
     "$CURRENT_DIR/scripts/status-line.sh" \
     "$CURRENT_DIR/scripts/switcher.sh" \
     "$CURRENT_DIR/scripts/win-status.sh" \
+    "$CURRENT_DIR/scripts/inject-window-format.sh" \
     "$CURRENT_DIR/scripts/lib/next-done.sh" \
     "$CURRENT_DIR/scripts/lib/session-preview.sh" \
     "$CURRENT_DIR/scripts/lib/state.sh" \
@@ -47,3 +48,8 @@ current_right=$(tmux show-option -gqv status-right)
 if ! printf '%s' "$current_right" | grep -q "agent-status"; then
     tmux set-option -ga status-right " #($CURRENT_DIR/scripts/status-line.sh)"
 fi
+
+# ── Window tab status injection ───────────────────────────────────────────────
+# Catppuccin (via tpm) loads with `sleep 5` and overwrites window-status-format.
+# We inject after it by running our script at sleep 7.
+tmux run-shell -b "sleep 7 && bash '$CURRENT_DIR/scripts/inject-window-format.sh'"
