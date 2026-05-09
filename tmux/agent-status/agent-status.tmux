@@ -26,9 +26,8 @@ chmod +x \
 # prefix+N  Jump to next "done" agent session
 #           Previously: monitor-silence toggle (moved to prefix+C-n)
 
-# Clean up old sync bindings so they don't survive a config reload.
+# Clean up A which was the old Oh My Tmux sync binding.
 tmux unbind A   2>/dev/null || true
-tmux unbind C-s 2>/dev/null || true
 
 tmux bind-key S display-popup \
     -E \

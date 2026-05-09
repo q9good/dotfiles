@@ -60,9 +60,9 @@ while IFS= read -r sess; do
 
         win_parts=()
         while IFS=$'\t' read -r pane_id pane_cmd; do
-            local cs; cs=$(fmt_pane_claude "$sess" "$pane_id")
+            cs=$(fmt_pane_claude "$sess" "$pane_id")
             [ -n "$cs" ] && win_parts+=("$(colorize "$cs")")
-            local ss; ss=$(fmt_pane_shell "$sess" "$pane_id" "$pane_cmd")
+            ss=$(fmt_pane_shell "$sess" "$pane_id" "$pane_cmd")
             [ -n "$ss" ] && win_parts+=("$(colorize "$ss")")
         done < <(tmux list-panes -t "${sess}:${widx}" -F "#{pane_id}	#{pane_current_command}" 2>/dev/null)
 
