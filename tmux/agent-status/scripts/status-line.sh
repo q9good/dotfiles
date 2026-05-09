@@ -23,6 +23,16 @@ while IFS= read -r session; do
     esac
 done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null)
 
+# Count shell commands currently running (>= 3s)
+shell_running=0
+for rf in "$SHELL_DIR/"*.running; do
+    [ -f "$rf" ] || continue
+    IFS=':' read -r _cmd start_ts < "$rf"
+    [ -n "$start_ts" ] || continue
+    age=$(( now - start_ts ))
+    (( age >= 3 )) && (( shell_running++ ))
+done
+
 # Collect recent shell long-command completions
 for nf in "$SHELL_DIR/"*.notify; do
     [ -f "$nf" ] || continue
@@ -36,9 +46,10 @@ for nf in "$SHELL_DIR/"*.notify; do
 done
 
 parts=()
-(( working > 0 ))    && parts+=("⚡${working}")
-(( waiting > 0 ))    && parts+=("⏸${waiting}")
-(( done_count > 0 )) && parts+=("✓${done_count}")
+(( working > 0 ))      && parts+=("⚡${working}")
+(( waiting > 0 ))      && parts+=("⏸${waiting}")
+(( done_count > 0 ))   && parts+=("✓${done_count}")
+(( shell_running > 0 )) && parts+=("▶${shell_running}")
 for item in "${shell_items[@]}"; do parts+=("$item"); done
 
 (( ${#parts[@]} > 0 )) && printf '%s' "${parts[*]}"

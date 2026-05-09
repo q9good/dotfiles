@@ -12,6 +12,7 @@ chmod +x \
     "$CURRENT_DIR/scripts/status-line.sh" \
     "$CURRENT_DIR/scripts/switcher.sh" \
     "$CURRENT_DIR/scripts/lib/next-done.sh" \
+    "$CURRENT_DIR/scripts/lib/session-preview.sh" \
     "$CURRENT_DIR/scripts/lib/state.sh" \
     2>/dev/null
 
@@ -29,7 +30,7 @@ tmux unbind C-s 2>/dev/null || true
 
 tmux bind-key S display-popup \
     -E \
-    -w 52 -h 24 \
+    -w 95 -h 28 \
     -T " Sessions " \
     -s "fg=#9E8C5D,bg=#1E1E2E" \
     -S "fg=#9E8C5D" \

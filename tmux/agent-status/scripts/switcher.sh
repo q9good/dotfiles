@@ -1,82 +1,119 @@
 #!/usr/bin/env bash
-# switcher.sh — fzf session/window picker with agent status indicators
+# switcher.sh — fzf session/window picker with agent + shell status indicators
 #
 # Layout:
 #   ⚡  main ◀
 #       1  nvim
-#       2  build  ⚡
+#       2  build  ⚙Bash 2m10s  ▶npm 30s
 #   ✓  work
 #       1  claude  ✓
 #
 # Enter on a session line  → switch to that session (its active window)
 # Enter on a window line   → switch to that session:window
+# Press r / ctrl-r         → refresh the list
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/state.sh"
 
 TAB=$'\t'
+now=$(date +%s)
 
-current_session=$(tmux display-message -p '#{session_name}' 2>/dev/null)
-current_window=$(tmux display-message -p '#{window_index}' 2>/dev/null)
-
-# Each entry: "DISPLAY${TAB}TARGET"
-#   TARGET = "session"          → switch to session's active window
-#   TARGET = "session:winidx"   → switch directly to that window
-lines=()
-
-while IFS= read -r sess; do
-    [ -z "$sess" ] && continue
-
-    # Session-level agent status icon
-    sf="$SESSION_DIR/${sess}.status"
-    icon="   "
-    if [ -f "$sf" ]; then
-        case "$(cat "$sf" 2>/dev/null)" in
-            working) icon="⚡ " ;;
-            done)    icon="✓  " ;;
-            wait)    icon="⏸ " ;;
-        esac
+fmt_elapsed() {
+    local secs=$(( now - $1 ))
+    (( secs < 0 )) && secs=0
+    if   (( secs < 60  )); then printf '%ds'    "$secs"
+    elif (( secs < 3600)); then printf '%dm%ds' "$(( secs/60 ))" "$(( secs%60 ))"
+    else                        printf '%dh%dm' "$(( secs/3600 ))" "$(( (secs%3600)/60 ))"
     fi
+}
 
-    marker=""
-    [ "$sess" = "$current_session" ] && marker=" ◀"
+generate_lines() {
+    local current_session current_window
+    current_session=$(tmux display-message -p '#{session_name}' 2>/dev/null)
+    current_window=$(tmux display-message -p '#{window_index}' 2>/dev/null)
 
-    lines+=("${icon} ${sess}${marker}${TAB}${sess}")
+    while IFS= read -r sess; do
+        [ -z "$sess" ] && continue
 
-    # Windows under this session
-    while IFS=$'\t' read -r widx wname; do
-        [ -z "$widx" ] && continue
-
-        # Per-window status: aggregate pane status files for this window
-        win_icon=""
-        while IFS= read -r pane_id; do
-            pf="$PANE_DIR/${sess}_${pane_id}.status"
-            [ -f "$pf" ] || continue
-            case "$(cat "$pf" 2>/dev/null)" in
-                working) win_icon="⚡"; break ;;
-                done)    [ "$win_icon" != "⚡" ] && win_icon="✓" ;;
-                wait)    [ -z "$win_icon" ] && win_icon="⏸" ;;
+        sf="$SESSION_DIR/${sess}.status"
+        icon="   "
+        if [ -f "$sf" ]; then
+            case "$(cat "$sf" 2>/dev/null)" in
+                working) icon="⚡ " ;;
+                done)    icon="✓  " ;;
+                wait)    icon="⏸ " ;;
             esac
-        done < <(tmux list-panes -t "${sess}:${widx}" -F '#{pane_id}' 2>/dev/null)
-
-        cur_mark=""
-        [ "$sess" = "$current_session" ] && [ "$widx" = "$current_window" ] && cur_mark=" ●"
-
-        if [ -n "$win_icon" ]; then
-            display="    ${widx}  ${wname}  ${win_icon}${cur_mark}"
-        else
-            display="    ${widx}  ${wname}${cur_mark}"
         fi
 
-        lines+=("${display}${TAB}${sess}:${widx}")
-    done < <(tmux list-windows -t "$sess" -F "#{window_index}${TAB}#{window_name}" 2>/dev/null)
+        marker=""
+        [ "$sess" = "$current_session" ] && marker=" ◀"
 
-done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null)
+        printf '%s %s%s\t%s\n' "$icon" "$sess" "$marker" "$sess"
 
-# Feed into fzf; --with-nth=1 shows only the display column
+        while IFS=$'\t' read -r widx wname; do
+            [ -z "$widx" ] && continue
+
+            win_parts=()
+
+            while IFS= read -r pane_id; do
+                # Claude state with tool name and elapsed time
+                pf="$PANE_DIR/${sess}_${pane_id}.status"
+                [ -f "$pf" ] || continue
+                ps=$(cat "$pf" 2>/dev/null)
+
+                case "$ps" in
+                    working)
+                        tool=$(cat "$PANE_DIR/${sess}_${pane_id}.tool" 2>/dev/null)
+                        ts_file="$PANE_DIR/${sess}_${pane_id}.start_ts"
+                        elapsed_str=""
+                        if [ -f "$ts_file" ]; then
+                            ts=$(cat "$ts_file" 2>/dev/null)
+                            elapsed_str=" $(fmt_elapsed "$ts")"
+                        fi
+                        if [ -n "$tool" ]; then
+                            win_parts+=("⚙${tool}${elapsed_str}")
+                        else
+                            win_parts+=("⚡${elapsed_str}")
+                        fi
+                        ;;
+                    done) win_parts+=("✓") ;;
+                    wait) win_parts+=("⏸") ;;
+                esac
+
+                # Shell running state
+                rf="$SHELL_DIR/${sess}_${pane_id}.running"
+                if [ -f "$rf" ]; then
+                    IFS=':' read -r cmd start_ts < "$rf"
+                    age=$(( now - start_ts ))
+                    if (( age >= 3 )); then
+                        win_parts+=("▶${cmd} $(fmt_elapsed "$start_ts")")
+                    fi
+                fi
+            done < <(tmux list-panes -t "${sess}:${widx}" -F '#{pane_id}' 2>/dev/null)
+
+            cur_mark=""
+            [ "$sess" = "$current_session" ] && [ "$widx" = "$current_window" ] && cur_mark=" ●"
+
+            if [ "${#win_parts[@]}" -gt 0 ]; then
+                status_str="  $(IFS=' '; printf '%s' "${win_parts[*]}")"
+                printf '    %s  %s%s%s\t%s\n' "$widx" "$wname" "$status_str" "$cur_mark" "${sess}:${widx}"
+            else
+                printf '    %s  %s%s\t%s\n' "$widx" "$wname" "$cur_mark" "${sess}:${widx}"
+            fi
+
+        done < <(tmux list-windows -t "$sess" -F "#{window_index}${TAB}#{window_name}" 2>/dev/null)
+
+    done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null)
+}
+
+# --list mode: output lines for fzf reload binding
+if [ "${1:-}" = "--list" ]; then
+    generate_lines
+    exit 0
+fi
+
 choice=$(
-    printf '%s\n' "${lines[@]}" \
-    | fzf \
+    generate_lines | fzf \
         --height=100% \
         --reverse \
         --no-border \
@@ -84,6 +121,11 @@ choice=$(
         --delimiter="$TAB" \
         --prompt="  " \
         --color="fg:250,bg:-1,hl:214,fg+:255,bg+:236,hl+:214,prompt:75,pointer:214" \
+        --preview="bash '$SCRIPT_DIR/lib/session-preview.sh' {2}" \
+        --preview-window="right:45:wrap" \
+        --bind="r:reload(bash '$SCRIPT_DIR/switcher.sh' --list)" \
+        --bind="ctrl-r:reload(bash '$SCRIPT_DIR/switcher.sh' --list)" \
+        --header="  r: refresh" \
     | cut -f2
 )
 
