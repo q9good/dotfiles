@@ -416,8 +416,8 @@ bind \\ split-window -h -c "#{pane_current_path}"
 bind - split-window -v -c "#{pane_current_path}"
 
 # synchronize panes (broadcast input to all panes)
-# Pane sync toggle (prefix+Y, replaces old prefix+S / prefix+A)
-bind Y if -F '#{pane_synchronized}' \
+# prefix+C-s: C-s is free (explicitly unbound), unambiguous unlike uppercase Y
+bind C-s if -F '#{?pane_synchronized,1,}' \
   'setw synchronize-panes off ; display "Panes unsynchronized"' \
   'setw synchronize-panes on  ; display "Panes synchronized"'
 
