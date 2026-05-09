@@ -49,7 +49,6 @@ aggregate_session() {
 case "$hook_type" in
     UserPromptSubmit)
         set_pane_status "working"
-        rm -f "$PANE_DIR/${TMUX_SESSION}_${PANE_ID}.stop_ts" 2>/dev/null
         aggregate_session
         ;;
 
@@ -73,15 +72,12 @@ case "$hook_type" in
         json_bool "$input" "stop_hook_active" && exit 0
         set_pane_status "done"
         aggregate_session
-        printf '%s\n' "$(date +%s)" > "$PANE_DIR/${TMUX_SESSION}_${PANE_ID}.stop_ts"
         ( printf '\a' > /dev/tty ) 2>/dev/null || printf '\a'
         "$SCRIPT_DIR/../scripts/popup.sh" --state=done --pane="$PANE_ID" &
         ;;
 
     Notification)
         msg=$(json_val "$input" "message")
-        # Notification fires for both permission requests ("to use X") and
-        # general idle alerts (task-complete, needs next user input).
         if printf '%s' "$msg" | grep -qi "to use"; then
             set_pane_status "wait"
             aggregate_session
@@ -90,13 +86,7 @@ case "$hook_type" in
             [[ "$msg" =~ to\ use\ (.+) ]] && label="${BASH_REMATCH[1]}?"
             "$SCRIPT_DIR/../scripts/popup.sh" --state=permission --label="$label" --pane="$PANE_ID" &
         else
-            # General idle alert: suppress if user has had any keyboard activity
-            # in the tmux client since Stop fired (means they already saw it).
-            stop_ts=$(cat "$PANE_DIR/${TMUX_SESSION}_${PANE_ID}.stop_ts" 2>/dev/null)
-            client_ts=$(tmux display-message -t "${PANE_ID:-}" -p '#{client_activity}' 2>/dev/null)
-            if [ -z "$stop_ts" ] || [ -z "$client_ts" ] || (( client_ts <= stop_ts )); then
-                ( printf '\a' > /dev/tty ) 2>/dev/null || printf '\a'
-            fi
+            ( printf '\a' > /dev/tty ) 2>/dev/null || printf '\a'
         fi
         ;;
 esac
