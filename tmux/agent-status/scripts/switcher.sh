@@ -14,18 +14,10 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/state.sh"
+source "$SCRIPT_DIR/lib/format-status.sh"
 
 TAB=$'\t'
 now=$(date +%s)
-
-fmt_elapsed() {
-    local secs=$(( now - $1 ))
-    (( secs < 0 )) && secs=0
-    if   (( secs < 60  )); then printf '%ds'    "$secs"
-    elif (( secs < 3600)); then printf '%dm%ds' "$(( secs/60 ))" "$(( secs%60 ))"
-    else                        printf '%dh%dm' "$(( secs/3600 ))" "$(( (secs%3600)/60 ))"
-    fi
-}
 
 generate_lines() {
     local current_session current_window
@@ -54,41 +46,11 @@ generate_lines() {
             [ -z "$widx" ] && continue
 
             win_parts=()
-
             while IFS= read -r pane_id; do
-                # Claude state with tool name and elapsed time
-                pf="$PANE_DIR/${sess}_${pane_id}.status"
-                [ -f "$pf" ] || continue
-                ps=$(cat "$pf" 2>/dev/null)
-
-                case "$ps" in
-                    working)
-                        tool=$(cat "$PANE_DIR/${sess}_${pane_id}.tool" 2>/dev/null)
-                        ts_file="$PANE_DIR/${sess}_${pane_id}.start_ts"
-                        elapsed_str=""
-                        if [ -f "$ts_file" ]; then
-                            ts=$(cat "$ts_file" 2>/dev/null)
-                            elapsed_str=" $(fmt_elapsed "$ts")"
-                        fi
-                        if [ -n "$tool" ]; then
-                            win_parts+=("⚙${tool}${elapsed_str}")
-                        else
-                            win_parts+=("⚡${elapsed_str}")
-                        fi
-                        ;;
-                    done) win_parts+=("✓") ;;
-                    wait) win_parts+=("⏸") ;;
-                esac
-
-                # Shell running state
-                rf="$SHELL_DIR/${sess}_${pane_id}.running"
-                if [ -f "$rf" ]; then
-                    IFS=':' read -r cmd start_ts < "$rf"
-                    age=$(( now - start_ts ))
-                    if (( age >= 3 )); then
-                        win_parts+=("▶${cmd} $(fmt_elapsed "$start_ts")")
-                    fi
-                fi
+                local cs; cs=$(fmt_pane_claude "$sess" "$pane_id")
+                [ -n "$cs" ] && win_parts+=("$cs")
+                local ss; ss=$(fmt_pane_shell "$sess" "$pane_id")
+                [ -n "$ss" ] && win_parts+=("$ss")
             done < <(tmux list-panes -t "${sess}:${widx}" -F '#{pane_id}' 2>/dev/null)
 
             cur_mark=""

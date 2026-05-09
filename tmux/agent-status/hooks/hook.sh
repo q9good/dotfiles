@@ -61,6 +61,13 @@ case "$hook_type" in
         aggregate_session
         ;;
 
+    PostToolUse)
+        # Tool finished; Claude is generating text again — clear tool name so
+        # status shows ⚡ (working) instead of the stale tool name.
+        [ -n "$PANE_ID" ] && \
+            rm -f "$PANE_DIR/${TMUX_SESSION}_${PANE_ID}.tool" 2>/dev/null
+        ;;
+
     Stop)
         json_bool "$input" "stop_hook_active" && exit 0
         set_pane_status "done"

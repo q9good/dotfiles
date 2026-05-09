@@ -546,7 +546,7 @@ setup_shell_integration() {
 # =============================================
 # Claude Code hooks
 # Wires hook.sh into ~/.claude/settings.json for:
-#   UserPromptSubmit, PreToolUse, Stop, Notification
+#   UserPromptSubmit, PreToolUse, PostToolUse, Stop, Notification
 # hook.sh updates agent-status state files and shows popup notifications.
 # =============================================
 setup_claude_hooks() {
@@ -573,8 +573,12 @@ setup_claude_hooks() {
     CLAUDE_SETTINGS="$HOME/.claude/settings.json"
     mkdir -p "$HOME/.claude"
 
-    # Idempotency: skip if hook.sh already wired
-    if [ -f "$CLAUDE_SETTINGS" ] && grep -qF "$HOOK_SCRIPT" "$CLAUDE_SETTINGS" 2>/dev/null; then
+    # Idempotency: skip only if hook.sh is already wired into PostToolUse
+    # (PostToolUse was the last event added, so its presence implies all others)
+    if [ -f "$CLAUDE_SETTINGS" ] \
+        && jq -e --arg cmd "$HOOK_SCRIPT" \
+            '[.hooks.PostToolUse[]?.hooks[]?.command] | index($cmd)' \
+            "$CLAUDE_SETTINGS" >/dev/null 2>&1; then
         echo "  Hooks already configured: $CLAUDE_SETTINGS"
         return
     fi
@@ -583,14 +587,16 @@ setup_claude_hooks() {
     hook_entry="{\"hooks\": [{\"type\": \"command\", \"command\": \"$HOOK_SCRIPT\"}]}"
 
     if [ -f "$CLAUDE_SETTINGS" ]; then
-        # Merge: set UserPromptSubmit + Stop + Notification to our hook.
-        # For PreToolUse: append to existing array (preserves AoneAgent hook).
+        # Merge: append our hook to each event, deduplicating by command.
+        # Uses append+dedup (not replace) to preserve hooks from other tools.
         jq --argjson entry "$hook_entry" '
-            .hooks.UserPromptSubmit = [$entry]
-          | .hooks.Stop             = [$entry]
-          | .hooks.Notification     = [$entry]
-          | .hooks.PreToolUse       = ((.hooks.PreToolUse // []) + [$entry]
-                                       | unique_by(.hooks[0].command))
+            def add_hook(ev): .hooks[ev] = ((.hooks[ev] // []) + [$entry]
+                                            | unique_by(.hooks[0].command));
+            add_hook("UserPromptSubmit")
+          | add_hook("PreToolUse")
+          | add_hook("PostToolUse")
+          | add_hook("Stop")
+          | add_hook("Notification")
         ' "$CLAUDE_SETTINGS" > "$CLAUDE_SETTINGS.tmp" \
         && mv "$CLAUDE_SETTINGS.tmp" "$CLAUDE_SETTINGS"
     else
@@ -598,6 +604,7 @@ setup_claude_hooks() {
             "hooks": {
                 "UserPromptSubmit": [$entry],
                 "PreToolUse":       [$entry],
+                "PostToolUse":      [$entry],
                 "Stop":             [$entry],
                 "Notification":     [$entry]
             }
