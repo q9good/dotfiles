@@ -27,14 +27,14 @@ function _as_write_running
     mkdir -p $_AS_SHELL_DIR
     set cmd_short (string sub -l 20 (string split ' ' $cmd)[1])
     printf '%s:%s:%s\n' "fish" "$cmd_short" (date +%s) \
-        > "$_AS_SHELL_DIR/${sess}_${TMUX_PANE}.running" 2>/dev/null
+        > "$_AS_SHELL_DIR/"$sess"_"$TMUX_PANE".running" 2>/dev/null
 end
 
 function _as_clear_running
     if not set -q TMUX; or not set -q TMUX_PANE; return; end
     set sess (tmux display-message -p '#{session_name}' 2>/dev/null)
     test -z "$sess"; and return
-    rm -f "$_AS_SHELL_DIR/${sess}_${TMUX_PANE}.running" 2>/dev/null
+    rm -f "$_AS_SHELL_DIR/"$sess"_"$TMUX_PANE".running" 2>/dev/null
 end
 
 function _notify_preexec --on-event fish_preexec
