@@ -77,6 +77,12 @@ on   = ["g", "r"]
 run  = 'shell --block -- ya emit cd "$(git rev-parse --show-toplevel)"'
 desc = "cd to Git repo root"
 
+# Compress with ouch
+[[mgr.prepend_keymap]]
+on   = "C"
+run  = "plugin ouch"
+desc = "Compress with ouch"
+
 # Confirm before quitting with multiple tabs
 [[mgr.prepend_keymap]]
 on   = "q"

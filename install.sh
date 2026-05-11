@@ -328,7 +328,26 @@ install_yazi_plugins() {
     yazi_pkg_add yazi-rs/plugins:smart-paste
     yazi_pkg_add yazi-rs/plugins:diff
     yazi_pkg_add yazi-rs/plugins:mime-ext
+    yazi_pkg_add ndtoan96/ouch
     echo "Yazi plugins done."
+}
+
+# =============================================
+# ouch — archive compression/decompression CLI
+# Used by ouch.yazi plugin for compress/extract in yazi
+# =============================================
+install_ouch() {
+    echo "=== Installing ouch ==="
+    if is_installed ouch; then
+        echo "ouch already installed: $(ouch --version 2>/dev/null)"
+        return
+    fi
+    if is_installed cargo; then
+        echo "  Installing ouch via cargo..."
+        cargo install ouch
+    else
+        echo "  [!] cargo not found. Please install Rust first, then run: cargo install ouch"
+    fi
 }
 
 # =============================================
@@ -617,6 +636,7 @@ install_common_tools
 install_ghostty_terminfo
 install_yazi
 install_yazi_plugins
+install_ouch
 configure_tmux
 install_tpm
 install_nvim_image_tools

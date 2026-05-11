@@ -1,0 +1,10 @@
+# ouch.yazi: preview archives in the preview pane
+[[plugin.prepend_previewers]]
+mime = "application/{*zip,tar,bzip2,7z*,rar,xz,zstd,java-archive}"
+run  = "ouch"
+
+# ouch: extract archives with ouch
+[opener]
+extract = [
+	{ run = 'ouch d -y "$@"', desc = "Extract here with ouch", for = "unix" },
+]

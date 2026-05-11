@@ -6,7 +6,7 @@ Personal dotfiles managed in `~/.config`, including configurations for:
 - **nvim** — [LazyVim](https://www.lazyvim.org/) based Neovim configuration with Catppuccin Mocha theme
 - **tmux** — [Oh my tmux!](https://github.com/gpakosz/.tmux) with Catppuccin Mocha theme, vim-tmux-navigator, tpm plugins, agent-status notifications
 - **fish** — Fish shell configuration
-- **yazi** — Terminal file manager with plugins (smart-enter, full-border, git, chmod, diff, etc.)
+- **yazi** — Terminal file manager with plugins (smart-enter, full-border, git, chmod, diff, ouch, etc.)
 - **htop** — System monitor configuration
 - **uv** — Python package manager configuration
 
@@ -46,7 +46,8 @@ sh ~/.config/install.sh
 This will:
 - **Install common tools** — curl, git, tmux, fzf, fd, ripgrep, bat, eza, zoxide, lazygit, lua, unzip, jq, clipboard tools
 - **Install yazi** — via `brew` (macOS), `pacman` (Arch), or `curl` (Ubuntu/Debian)
-- **Install yazi plugins** — smart-enter, full-border, toggle-pane, jump-to-char, git, smart-filter, chmod, smart-paste, diff, mime-ext
+- **Install yazi plugins** — smart-enter, full-border, toggle-pane, jump-to-char, git, smart-filter, chmod, smart-paste, diff, mime-ext, ouch
+- **Install ouch** — multi-format archive tool via cargo
 - **Configure tmux** — symlink `~/.tmux.conf`, copy `.tmux.conf.local`
 - **Install tpm** — tmux plugin manager
 - **Ghostty terminfo** — prints instructions if `xterm-ghostty` terminfo is missing (for SSH)
@@ -105,15 +106,36 @@ Ghostty ──SSH──▶ Remote tmux ──▶ nvim + panes
 
 ### Ghostty (Terminal Emulator, Catppuccin Mocha theme)
 
-Features: `copy-on-select`, `mouse-shift-capture = false` (prevents garbled mouse sequences).
+Features: `copy-on-select`, `background-opacity = 0.88`, `background-blur-radius = 12`, `macos-titlebar-style = transparent`.
+
+#### Tabs & Windows (macOS defaults)
 
 | Key | Action |
 |-----|--------|
-| `Alt+\` | Split right (vertical) |
-| `Alt+-` | Split down (horizontal) |
-| `Alt+x` | Close current split |
-| `C-h/j/k/l` | Navigate between Ghostty splits (performable, passes through to tmux/nvim) |
+| `Cmd+T` | New tab |
+| `Cmd+W` | Close tab / split |
+| `Cmd+N` | New window |
+| `Cmd+1-9` | Switch to tab by number |
+| `Cmd+Shift+[` / `]` | Previous / next tab |
+
+#### Splits
+
+| Key | Action | Source |
+|-----|--------|--------|
+| `Alt+\` | Split right (vertical) | custom |
+| `Alt+-` | Split down (horizontal) | custom |
+| `Alt+x` | Close current split | custom |
+| `Cmd+D` | Split right | macOS default |
+| `Cmd+Shift+D` | Split down | macOS default |
+| `C-h/j/k/l` | Navigate splits (performable — passes through to tmux/nvim when at edge) | custom |
+
+#### Misc
+
+| Key | Action |
+|-----|--------|
+| `Cmd+K` | Clear screen + scrollback |
 | `Ctrl+Shift+R` | Reset terminal (fix garbled output after SSH disconnect) |
+| `Cmd+Shift+,` | Reload config |
 
 ### Tmux (Oh my tmux!, prefix = `` ` ``)
 
@@ -230,6 +252,8 @@ The popup is silently skipped when you are already viewing the triggering window
 | `<Space>` | Leader key |
 | `<leader>qq` | Quit all |
 | `<leader>e` | Open/close file explorer (Snacks Explorer) |
+| `<leader>y` | Open yazi in current file's directory |
+| `<leader>Y` | Open yazi in cwd |
 | `<leader>ff` | Find files |
 | `<leader>/` | Live grep |
 | `<leader>fb` | Find buffers |
@@ -335,6 +359,7 @@ The popup is silently skipped when you are already viewing the triggering window
 | `a` | Create file |
 | `c m` | Chmod on selected files |
 | `d d` | Diff selected with hovered file |
+| `C` | Compress selected files with ouch |
 | `.` | Toggle hidden files |
 
 #### Tabs & UI
