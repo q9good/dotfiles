@@ -73,7 +73,7 @@ case "$hook_type" in
         set_pane_status "done"
         aggregate_session
         ( printf '\a' > /dev/tty ) 2>/dev/null || printf '\a'
-        "$SCRIPT_DIR/../scripts/popup.sh" --state=done --pane="$PANE_ID" &
+        "$SCRIPT_DIR/../scripts/popup.sh" --state=done --pane="$PANE_ID" --session="$TMUX_SESSION" &
         ;;
 
     Notification)
@@ -87,7 +87,7 @@ case "$hook_type" in
             if [[ "$msg" =~ to\ use\ (.+) ]]; then
                 label="${BASH_REMATCH[1]}?"
             fi
-            "$SCRIPT_DIR/../scripts/popup.sh" --state=permission --label="$label" --pane="$PANE_ID" &
+            "$SCRIPT_DIR/../scripts/popup.sh" --state=permission --label="$label" --pane="$PANE_ID" --session="$TMUX_SESSION" &
         fi
         ;;
 esac

@@ -18,6 +18,7 @@ if [[ "${1:-}" == "--render" ]]; then
     win="${NOTIFY_WIN:-}"
     win_idx="${NOTIFY_WIN_IDX:-0}"
     label="${NOTIFY_LABEL:-DONE}"
+    session="${NOTIFY_SESSION:-}"
 
     # Catppuccin Mocha palette
     bd=$'\033[38;2;180;190;254m'  # lavender  (border/frame)
@@ -52,7 +53,8 @@ if [[ "${1:-}" == "--render" ]]; then
         (( remaining < 1 )) && remaining=1
         read -t "$remaining" -rsn1 k || exit 0
         case "$k" in
-            "")  tmux select-window -t ":$win_idx" 2>/dev/null; exit 0 ;;
+            "")  [ -n "$session" ] && tmux switch-client -t "$session" 2>/dev/null
+                 tmux select-window -t "${session:+$session:}$win_idx" 2>/dev/null; exit 0 ;;
             q)   exit 0 ;;
         esac
     done
@@ -66,9 +68,10 @@ src_pane="${TMUX_PANE:-}"
 
 for arg in "$@"; do
     case "$arg" in
-        --state=*) state="${arg#--state=}" ;;
-        --label=*) label="${arg#--label=}" ;;
-        --pane=*)  src_pane="${arg#--pane=}" ;;
+        --state=*)   state="${arg#--state=}" ;;
+        --label=*)   label="${arg#--label=}" ;;
+        --pane=*)    src_pane="${arg#--pane=}" ;;
+        --session=*) src_session="${arg#--session=}" ;;
     esac
 done
 
@@ -102,5 +105,6 @@ tmux display-popup \
     -e "NOTIFY_STATE=$state" \
     -e "NOTIFY_WIN=$win" \
     -e "NOTIFY_WIN_IDX=$win_idx" \
+    -e "NOTIFY_SESSION=$src_session" \
     -e "NOTIFY_LABEL=$label" \
     -E "bash '$SCRIPT' --render"
