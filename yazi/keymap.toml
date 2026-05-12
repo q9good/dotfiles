@@ -1,6 +1,7 @@
 # ===== Manager =====
 
 # Drop to shell: open a full shell session in the current directory
+[[mgr.prepend_keymap]]
 on   = "!"
 for  = "unix"
 run  = 'shell "$SHELL" --block'

@@ -360,6 +360,7 @@ The popup is silently skipped when you are already viewing the triggering window
 | `c m` | Chmod on selected files |
 | `d d` | Diff selected with hovered file |
 | `C` | Compress selected files with ouch |
+| `l` (on archive) | Extract archive with ouch (via opener) |
 | `.` | Toggle hidden files |
 
 #### Tabs & UI
@@ -371,7 +372,7 @@ The popup is silently skipped when you are already viewing the triggering window
 | `T` | Maximize / restore preview pane |
 | `t h` | Hide / show preview pane |
 | `q` | Quit (confirms if multiple tabs open) |
-| `!` | Open shell in current directory |
+| `!` | Open shell in current directory (`exit` or `Ctrl+D` to return) |
 
 ---
 

@@ -1,0 +1,18 @@
+git:
+  pull:
+    rebase: true
+customCommands:
+  - key: "<c-p>"
+    context: "global"
+    command: "git push {{.Form.Remote}} HEAD:refs/for/{{.Form.Branch}}"
+    description: "Push to Gerrit"
+    loadingText: "Pushing to Gerrit..."
+    prompts:
+      - type: "input"
+        key: "Remote"
+        title: "Remote name"
+        initialValue: "origin"
+      - type: "input"
+        key: "Branch"
+        title: "Target branch"
+        initialValue: "master"

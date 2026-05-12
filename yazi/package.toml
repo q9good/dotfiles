@@ -48,5 +48,10 @@ use = "yazi-rs/plugins:mime-ext"
 rev = "ac82af3"
 hash = "2678c84a0b3a0b22504e918ccaf99011"
 
+[[plugin.deps]]
+use = "ndtoan96/ouch"
+rev = "406ce6c"
+hash = "f5afc904d5106ee368c8aa2ded43bd74"
+
 [flavor]
 deps = []
