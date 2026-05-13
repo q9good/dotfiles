@@ -131,11 +131,11 @@ Features: `copy-on-select`, `background-opacity = 0.88`, `background-blur-radius
 
 #### Misc
 
-| Key | Action |
-|-----|--------|
-| `Cmd+K` | Clear screen + scrollback |
-| `Ctrl+Shift+R` | Reset terminal (fix garbled output after SSH disconnect) |
-| `Cmd+Shift+,` | Reload config |
+| Key | Action | Source |
+|-----|--------|--------|
+| `Cmd+K` | Clear screen + scrollback | macOS default |
+| `Ctrl+Shift+R` | Reset terminal (fix garbled output after SSH disconnect) | custom |
+| `Cmd+Shift+,` | Reload config | macOS default |
 
 ### Tmux (Oh my tmux!, prefix = `` ` ``)
 
@@ -146,7 +146,7 @@ Features: `copy-on-select`, `background-opacity = 0.88`, `background-blur-radius
 | `prefix + c` | New window |
 | `prefix + ,` | Rename window |
 | `prefix + &` | Kill window |
-| `prefix + n` / `p` | Next / previous window |
+| `prefix + C-h` / `C-l` | Previous / next window (repeatable) |
 | `prefix + 0-9` | Switch to window by number |
 | `prefix + d` | Detach session |
 | `prefix + $` | Rename session |
@@ -178,8 +178,8 @@ The popup is silently skipped when you are already viewing the triggering window
 |-----|--------|
 | `prefix + S` | **Agent session switcher** — fzf popup listing all sessions with ⚡/✓/⏸ status |
 | `prefix + N` | **Jump to next Done session** — switches to the first session where Claude just finished |
-| `prefix + Y` | Toggle pane synchronization on/off (was `prefix+S` / `prefix+A`) |
-| `prefix + C-n` | Toggle monitor-silence notify (was `prefix+N`) |
+| `prefix + A` | Toggle pane synchronization on/off |
+| `prefix + C-n` | Toggle monitor-silence notify |
 
 #### Pane — Create / Navigate / Close
 
@@ -201,7 +201,6 @@ The popup is silently skipped when you are already viewing the triggering window
 | `prefix + M-o` | Rotate all panes counter-clockwise |
 | `prefix + Space` | Cycle through built-in layouts (even-h/v, main-h/v, tiled) |
 | `prefix + !` | Break current pane into a new window |
-| `prefix + @` | Join another window's pane into current window (Oh my tmux!) |
 | `:join-pane -t :2` | Move current pane to window 2 (command mode) |
 
 #### Pane — Resize / Zoom / Misc
@@ -213,7 +212,6 @@ The popup is silently skipped when you are already viewing the triggering window
 | `prefix + +` | Maximize pane (break to new window, press again to restore — Oh my tmux!) |
 | `prefix + k` | Clear screen + scrollback (Ctrl+L is taken by vim-tmux-navigator) |
 | `prefix + m` | Toggle mouse on/off |
-| `prefix + S` | Agent session switcher (see Agent Status section above) |
 
 #### Plugins & Config
 
@@ -360,7 +358,7 @@ The popup is silently skipped when you are already viewing the triggering window
 | `c m` | Chmod on selected files |
 | `d d` | Diff selected with hovered file |
 | `C` | Compress selected files with ouch |
-| `l` (on archive) | Extract archive with ouch (via opener) |
+| `l` (on archive) | Extract archive with ouch (via smart-enter → opener) |
 | `.` | Toggle hidden files |
 
 #### Tabs & UI
