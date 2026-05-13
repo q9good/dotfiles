@@ -4,9 +4,13 @@
 # Compatible with: bash, zsh, fish (via shebang)
 # Supported OS: macOS (brew), Arch Linux (pacman), Ubuntu/Debian (curl)
 
-set -e
-
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+FAILED_STEPS=""
+
+# Record a failed step for the end-of-script summary
+record_failure() {
+    FAILED_STEPS="$FAILED_STEPS $1"
+}
 
 # =============================================
 # Detect OS and package manager
@@ -38,7 +42,7 @@ detect_os() {
 install_with_brew() {
     if ! command -v brew >/dev/null 2>&1; then
         echo "Error: brew not found. Install Homebrew first: https://brew.sh"
-        exit 1
+        return 1
     fi
     echo "Installing with brew: $*"
     brew install "$@"
@@ -60,8 +64,6 @@ is_installed() {
 run_with_timeout() {
     _rt_secs="$1"
     shift
-    # Disable set -e locally so non-zero exits/timeout don't abort the whole script
-    set +e
     if command -v timeout >/dev/null 2>&1; then
         if timeout --help 2>&1 | grep -q -- '--signal'; then
             timeout --signal=KILL "$_rt_secs" "$@"
@@ -84,8 +86,6 @@ run_with_timeout() {
         echo "  [!] Command timed out after ${_rt_secs}s"
         return 124
     fi
-    # Re-enable set -e before returning
-    set -e
     return "$_rt_ret"
 }
 
@@ -286,7 +286,7 @@ install_yazi() {
             case "$ARCH" in
                 x86_64)  YAZI_TARGET="x86_64-unknown-linux-musl" ;;
                 aarch64) YAZI_TARGET="aarch64-unknown-linux-musl" ;;
-                *)       echo "Unsupported arch: $ARCH"; exit 1 ;;
+                *)       echo "Unsupported arch: $ARCH"; return 1 ;;
             esac
             curl -fLo /tmp/yazi.zip "https://github.com/sxyazi/yazi/releases/latest/download/yazi-${YAZI_TARGET}.zip"
             unzip -o /tmp/yazi.zip -d /tmp/yazi-extract
@@ -296,7 +296,7 @@ install_yazi() {
             ;;
         *)
             echo "Unsupported OS for Yazi installation"
-            exit 1
+            return 1
             ;;
     esac
     echo "Yazi installed: $(yazi --version 2>/dev/null || ~/.local/bin/yazi --version 2>/dev/null)"
@@ -632,16 +632,34 @@ setup_claude_hooks() {
 # Main
 # =============================================
 detect_os
-install_common_tools
-install_ghostty_terminfo
-install_yazi
-install_yazi_plugins
-install_ouch
-configure_tmux
-install_tpm
-install_nvim_image_tools
-setup_shell_integration
-setup_claude_hooks
+
+for step in \
+    install_common_tools \
+    install_ghostty_terminfo \
+    install_yazi \
+    install_yazi_plugins \
+    install_ouch \
+    configure_tmux \
+    install_tpm \
+    install_nvim_image_tools \
+    setup_shell_integration \
+    setup_claude_hooks
+do
+    if ! $step; then
+        echo "  [!] $step failed, continuing..."
+        record_failure "$step"
+    fi
+done
 
 echo ""
-echo "=== All done! ==="
+if [ -n "$FAILED_STEPS" ]; then
+    echo "=== Done (with errors) ==="
+    echo "The following steps failed:"
+    for f in $FAILED_STEPS; do
+        echo "  - $f"
+    done
+    echo ""
+    echo "Fix the issues above and re-run: sh ~/.config/install.sh"
+else
+    echo "=== All done! ==="
+fi
