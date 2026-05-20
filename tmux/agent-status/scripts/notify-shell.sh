@@ -6,8 +6,13 @@ ELAPSED="${1:-0}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/state.sh"
 
-# Bell (works in all environments)
-printf '\a' > /dev/tty 2>/dev/null || printf '\a'
+# Bell — use pane TTY for reliability (subprocesses may lack /dev/tty)
+if [ -n "${TMUX_PANE:-}" ]; then
+    _tty=$(tmux display-message -p -t "${TMUX_PANE}" '#{pane_tty}' 2>/dev/null)
+    [ -n "$_tty" ] && [ -w "$_tty" ] && printf '\a' > "$_tty" || ( printf '\a' > /dev/tty ) 2>/dev/null
+else
+    printf '\a' > /dev/tty 2>/dev/null || printf '\a'
+fi
 
 [ -z "${TMUX:-}" ] && exit 0
 

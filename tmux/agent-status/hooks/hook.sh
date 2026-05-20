@@ -19,6 +19,18 @@ hook_type=$(json_val "$input" "hook_event_name")
 TMUX_SESSION=$(tmux display-message -p '#{session_name}' 2>/dev/null) || exit 0
 PANE_ID="${TMUX_PANE:-}"
 
+ring_bell() {
+    # Claude Code hooks may lack a controlling terminal (/dev/tty unavailable).
+    # Write BEL directly to the pane's PTY device so tmux detects and forwards it.
+    local tty
+    tty=$(tmux display-message -p -t "${PANE_ID}" '#{pane_tty}' 2>/dev/null)
+    if [ -n "$tty" ] && [ -w "$tty" ]; then
+        printf '\a' > "$tty"
+    else
+        ( printf '\a' > /dev/tty ) 2>/dev/null || true
+    fi
+}
+
 set_pane_status() {
     local status="$1"
     [ -n "$PANE_ID" ] || return
@@ -72,14 +84,14 @@ case "$hook_type" in
         json_bool "$input" "stop_hook_active" && exit 0
         set_pane_status "done"
         aggregate_session
-        ( printf '\a' > /dev/tty ) 2>/dev/null || printf '\a'
+        ring_bell
         "$SCRIPT_DIR/../scripts/popup.sh" --state=done --pane="$PANE_ID" --session="$TMUX_SESSION" &
         ;;
 
     Notification)
         msg=$(json_val "$input" "message")
         current=$(cat "$PANE_DIR/${TMUX_SESSION}_${PANE_ID}.status" 2>/dev/null)
-        ( printf '\a' > /dev/tty ) 2>/dev/null || printf '\a'
+        ring_bell
         if [ "$current" != "done" ]; then
             set_pane_status "wait"
             aggregate_session
