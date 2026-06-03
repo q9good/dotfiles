@@ -7,6 +7,7 @@ return {
         cpp = { "clang-format" },
         json = { "prettier" },
         jsonc = { "prettier" },
+        lua = { "stylua" },
       },
     },
   },

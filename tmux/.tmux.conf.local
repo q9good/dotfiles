@@ -383,6 +383,9 @@ tmux_conf_urlscan_options="--compact --dedupe"
 # increase history size
 #set -g history-limit 10000
 
+# Force login shell so new panes source ~/.profile -> ~/.bashrc (aliases, PATH, etc.)
+set -g default-command "$SHELL -i -l"
+
 # true color + background transparency passthrough
 set -g default-terminal "tmux-256color"
 set -as terminal-overrides ",xterm-256color:Tc"

@@ -8,7 +8,7 @@ source "$SCRIPT_DIR/lib/state.sh"
 
 # Bell — use pane TTY for reliability (subprocesses may lack /dev/tty)
 if [ -n "${TMUX_PANE:-}" ]; then
-    _tty=$(tmux display-message -p -t "${TMUX_PANE}" '#{pane_tty}' 2>/dev/null)
+    _tty=$(timeout 2 tmux display-message -p -t "${TMUX_PANE}" '#{pane_tty}' 2>/dev/null)
     [ -n "$_tty" ] && [ -w "$_tty" ] && printf '\a' > "$_tty" || ( printf '\a' > /dev/tty ) 2>/dev/null
 else
     printf '\a' > /dev/tty 2>/dev/null || printf '\a'
@@ -16,9 +16,9 @@ fi
 
 [ -z "${TMUX:-}" ] && exit 0
 
-WIN_NAME=$(tmux display-message -p '#W' 2>/dev/null)
-WIN=$(tmux display-message -p '#I:#W' 2>/dev/null)
-SESSION=$(tmux display-message -p '#{session_name}' 2>/dev/null)
+WIN_NAME=$(timeout 2 tmux display-message -p '#W' 2>/dev/null)
+WIN=$(timeout 2 tmux display-message -p '#I:#W' 2>/dev/null)
+SESSION=$(timeout 2 tmux display-message -p '#{session_name}' 2>/dev/null)
 PANE="${TMUX_PANE:-}"
 
 # Write notify file for status bar (auto-expires in status-line.sh)

@@ -53,8 +53,8 @@ if [[ "${1:-}" == "--render" ]]; then
         (( remaining < 1 )) && remaining=1
         read -t "$remaining" -rsn1 k || exit 0
         case "$k" in
-            "")  [ -n "$session" ] && tmux switch-client -t "$session" 2>/dev/null
-                 tmux select-window -t "${session:+$session:}$win_idx" 2>/dev/null; exit 0 ;;
+            "")  [ -n "$session" ] && timeout 2 tmux switch-client -t "$session" 2>/dev/null
+                 timeout 2 tmux select-window -t "${session:+$session:}$win_idx" 2>/dev/null; exit 0 ;;
             q)   exit 0 ;;
         esac
     done
@@ -86,11 +86,11 @@ esac
 # Skip "done" popup (Claude finished) when already viewing that window.
 # Shell and permission popups always show.
 if [[ "$state" == "done" && -n "$src_pane" ]]; then
-    win_active=$(tmux display-message -t "$src_pane" -p '#{window_active}' 2>/dev/null)
+    win_active=$(timeout 2 tmux display-message -t "$src_pane" -p '#{window_active}' 2>/dev/null)
     [[ "$win_active" == "1" ]] && exit 0
 fi
 
-win=$(tmux display-message ${src_pane:+-t "$src_pane"} -p '#I:#W' 2>/dev/null)
+win=$(timeout 2 tmux display-message ${src_pane:+-t "$src_pane"} -p '#I:#W' 2>/dev/null)
 win_idx="${win%%:*}"
 
 [[ "$state" == "permission" ]] && pw=34 || pw=30

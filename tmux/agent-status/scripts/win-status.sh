@@ -21,7 +21,7 @@ while IFS=$'\t' read -r pane_id pane_cmd; do
     [ -z "$claude_out" ] && claude_out=$(fmt_pane_claude "$sess" "$pane_id")
     [ -z "$shell_out" ]  && shell_out=$(fmt_pane_shell  "$sess" "$pane_id" "$pane_cmd")
     [ -n "$claude_out" ] && [ -n "$shell_out" ] && break
-done < <(tmux list-panes -t "${sess}:${widx}" -F "#{pane_id}	#{pane_current_command}" 2>/dev/null)
+done < <(timeout 2 tmux list-panes -t "${sess}:${widx}" -F "#{pane_id}	#{pane_current_command}" 2>/dev/null)
 
 out="${claude_out}${claude_out:+${shell_out:+ }}${shell_out}"
 [ -n "$out" ] && printf ' %s' "$out"

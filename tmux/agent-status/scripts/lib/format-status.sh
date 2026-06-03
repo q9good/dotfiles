@@ -60,7 +60,7 @@ fmt_pane_shell() {
     # Idle: use caller-supplied pane_cmd, or query tmux as fallback
     local pane_cmd="${3:-}"
     [ -z "$pane_cmd" ] && \
-        pane_cmd=$(tmux display-message -t "${pane_id}" -p '#{pane_current_command}' 2>/dev/null)
+        pane_cmd=$(timeout 2 tmux display-message -t "${pane_id}" -p '#{pane_current_command}' 2>/dev/null)
     case "$pane_cmd" in
         bash|zsh|fish) printf '%s' "$pane_cmd" ;;
     esac

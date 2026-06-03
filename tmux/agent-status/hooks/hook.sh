@@ -16,14 +16,14 @@ hook_type=$(json_val "$input" "hook_event_name")
 [ -z "$hook_type" ] && hook_type="${1:-}"
 
 [ -z "${TMUX:-}" ] && exit 0
-TMUX_SESSION=$(tmux display-message -p '#{session_name}' 2>/dev/null) || exit 0
+TMUX_SESSION=$(timeout 2 tmux display-message -p '#{session_name}' 2>/dev/null) || exit 0
 PANE_ID="${TMUX_PANE:-}"
 
 ring_bell() {
     # Claude Code hooks may lack a controlling terminal (/dev/tty unavailable).
     # Write BEL directly to the pane's PTY device so tmux detects and forwards it.
     local tty
-    tty=$(tmux display-message -p -t "${PANE_ID}" '#{pane_tty}' 2>/dev/null)
+    tty=$(timeout 2 tmux display-message -p -t "${PANE_ID}" '#{pane_tty}' 2>/dev/null)
     if [ -n "$tty" ] && [ -w "$tty" ]; then
         printf '\a' > "$tty"
     else

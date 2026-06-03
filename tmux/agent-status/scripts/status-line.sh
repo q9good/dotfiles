@@ -21,7 +21,7 @@ while IFS= read -r session; do
         wait)    (( waiting++ )) ;;
         done)    (( done_count++ )) ;;
     esac
-done < <(tmux list-sessions -F '#{session_name}' 2>/dev/null)
+done < <(timeout 2 tmux list-sessions -F '#{session_name}' 2>/dev/null)
 
 # Count shell commands currently running (>= 3s)
 shell_running=0

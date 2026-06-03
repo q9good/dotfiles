@@ -9,7 +9,7 @@ MARKER="#(${WIN_STATUS})"
 inject() {
     local option="$1"
     local fmt
-    fmt=$(tmux show-option -gv "$option" 2>/dev/null)
+    fmt=$(timeout 2 tmux show-option -gv "$option" 2>/dev/null)
     [ -n "$fmt" ] || return
     printf '%s' "$fmt" | grep -q "win-status" && return
     # Insert before " #T" so status appears between window index and title
@@ -17,7 +17,7 @@ inject() {
     if [ "$new" = "$fmt" ]; then
         new="${fmt}${MARKER}"
     fi
-    tmux set-option -g "$option" "$new"
+    timeout 2 tmux set-option -g "$option" "$new"
 }
 
 inject window-status-format
