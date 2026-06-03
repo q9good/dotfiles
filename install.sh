@@ -670,6 +670,41 @@ setup_claude_hooks() {
 }
 
 # =============================================
+# Claude Code statusline
+# Symlinks statusline-command.sh from dotfiles into ~/.claude/
+# =============================================
+setup_claude_statusline() {
+  echo "=== Setting up Claude Code statusline ==="
+
+  SRC="$SCRIPT_DIR/claude/statusline-command.sh"
+  DST="$HOME/.claude/statusline-command.sh"
+
+  if [ ! -f "$SRC" ]; then
+    echo "  [!] Not found: $SRC — skipping."
+    return
+  fi
+
+  mkdir -p "$HOME/.claude"
+
+  if [ -L "$DST" ]; then
+    CURRENT="$(readlink "$DST")"
+    if [ "$CURRENT" = "$SRC" ]; then
+      echo "  Symlink already correct: $DST"
+      return
+    else
+      echo "  Updating symlink: $DST (was $CURRENT)"
+      rm "$DST"
+    fi
+  elif [ -e "$DST" ]; then
+    echo "  Replacing existing file with symlink: $DST"
+    mv "$DST" "$DST.bak.$(date +%Y%m%d%H%M%S)"
+  fi
+
+  ln -s "$SRC" "$DST"
+  echo "  Symlink created: $DST -> $SRC"
+}
+
+# =============================================
 # Main
 # =============================================
 detect_os
@@ -685,7 +720,8 @@ for step in \
   install_nvim_image_tools \
   install_prettier \
   setup_shell_integration \
-  setup_claude_hooks; do
+  setup_claude_hooks \
+  setup_claude_statusline; do
   if ! $step; then
     echo "  [!] $step failed, continuing..."
     record_failure "$step"
