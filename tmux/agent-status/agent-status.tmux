@@ -13,6 +13,7 @@ chmod +x \
     "$CURRENT_DIR/scripts/switcher.sh" \
     "$CURRENT_DIR/scripts/win-status.sh" \
     "$CURRENT_DIR/scripts/inject-window-format.sh" \
+    "$CURRENT_DIR/scripts/lib/jump-back.sh" \
     "$CURRENT_DIR/scripts/lib/next-done.sh" \
     "$CURRENT_DIR/scripts/lib/session-preview.sh" \
     "$CURRENT_DIR/scripts/lib/state.sh" \
@@ -22,6 +23,7 @@ chmod +x \
 #
 # prefix+S  Agent session/window switcher (fzf, shows session+window tree)
 # prefix+N  Jump to next "done" agent session
+# prefix+Enter  Jump back to previous window (stack-based, supports nested jumps)
 
 tmux bind-key S display-popup \
     -E \
@@ -32,6 +34,7 @@ tmux bind-key S display-popup \
     "$CURRENT_DIR/scripts/switcher.sh"
 
 tmux bind-key N run-shell "$CURRENT_DIR/scripts/lib/next-done.sh"
+tmux bind-key Enter run-shell "$CURRENT_DIR/scripts/lib/jump-back.sh"
 
 # ── Status bar integration ────────────────────────────────────────────────────
 tmux set-option -g status-interval 2

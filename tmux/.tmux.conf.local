@@ -455,6 +455,11 @@ bind -T copy-mode-vi C-l select-pane -R
 # guarantee the visible area is erased, then C-l redraws the shell prompt.
 bind k run-shell 'printf "\033[2J\033[H" > "#{pane_tty}"' \; send-keys C-l \; clear-history
 
+# -- join-pane -----------------------------------------------------------------
+# prefix+M  interactively move the current pane to another window.
+# Prompts for target window index, e.g. type "2" to join window 2.
+bind M command-prompt -p "join pane to window:" "join-pane -h -t ':%%'"
+
 # -- tpm -----------------------------------------------------------------------
 
 tmux_conf_update_plugins_on_launch=true

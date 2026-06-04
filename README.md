@@ -172,6 +172,7 @@ When an event triggers, a small popup appears in the **top-right corner**:
 | `⏱ ⏱` `bash 42s` | Shell command finished (≥ 8 s) | 5 s |
 
 Press **Enter** inside a popup to jump to the triggering window. Press **q** to dismiss early.
+After jumping, press `prefix + Enter` to jump back (stack-based, supports nested jumps).
 The popup is silently skipped when you are already viewing the triggering window.
 
 | Key | Action |
@@ -201,7 +202,7 @@ The popup is silently skipped when you are already viewing the triggering window
 | `prefix + M-o` | Rotate all panes counter-clockwise |
 | `prefix + Space` | Cycle through built-in layouts (even-h/v, main-h/v, tiled) |
 | `prefix + !` | Break current pane into a new window |
-| `:join-pane -t :2` | Move current pane to window 2 (command mode) |
+| `prefix + M` | Move current pane to another window (prompts for target index) |
 
 #### Pane — Resize / Zoom / Misc
 
@@ -227,7 +228,7 @@ The popup is silently skipped when you are already viewing the triggering window
 
 | Key | Action |
 |-----|--------|
-| `prefix + Enter` | Enter copy mode (also `prefix + [`) |
+| `prefix + [` | Enter copy mode |
 | `h/j/k/l` | Move cursor (left/down/up/right) |
 | `v` | Begin selection |
 | `y` | Copy selection to OS clipboard & exit |

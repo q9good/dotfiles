@@ -19,6 +19,8 @@ if [[ "${1:-}" == "--render" ]]; then
     win_idx="${NOTIFY_WIN_IDX:-0}"
     label="${NOTIFY_LABEL:-DONE}"
     session="${NOTIFY_SESSION:-}"
+    caller_session="${NOTIFY_CALLER_SESSION:-}"
+    caller_win_idx="${NOTIFY_CALLER_WIN_IDX:-}"
 
     # Catppuccin Mocha palette
     bd=$'\033[38;2;180;190;254m'  # lavender  (border/frame)
@@ -53,7 +55,17 @@ if [[ "${1:-}" == "--render" ]]; then
         (( remaining < 1 )) && remaining=1
         read -t "$remaining" -rsn1 k || exit 0
         case "$k" in
-            "")  [ -n "$session" ] && timeout 2 tmux switch-client -t "$session" 2>/dev/null
+            "")  if [[ -n "$caller_session" && -n "$caller_win_idx" ]]; then
+                     mkdir -p "$HOME/.cache/agent-status" 2>/dev/null
+                     printf '%s\n' "${caller_session}:${caller_win_idx}" \
+                         >> "$HOME/.cache/agent-status/location_stack"
+                     # Cap stack at 50 entries
+                     tail -n 50 "$HOME/.cache/agent-status/location_stack" \
+                         > "$HOME/.cache/agent-status/location_stack.tmp" \
+                         && mv "$HOME/.cache/agent-status/location_stack.tmp" \
+                               "$HOME/.cache/agent-status/location_stack"
+                 fi
+                 [ -n "$session" ] && timeout 2 tmux switch-client -t "$session" 2>/dev/null
                  timeout 2 tmux select-window -t "${session:+$session:}$win_idx" 2>/dev/null; exit 0 ;;
             q)   exit 0 ;;
         esac
@@ -93,6 +105,11 @@ fi
 win=$(timeout 2 tmux display-message ${src_pane:+-t "$src_pane"} -p '#I:#W' 2>/dev/null)
 win_idx="${win%%:*}"
 
+# Capture the caller's current location so the renderer can push it onto the
+# location stack before jumping (enables prefix+Enter to jump back).
+caller_session=$(timeout 2 tmux display-message -p '#{session_name}' 2>/dev/null)
+caller_win_idx=$(timeout 2 tmux display-message -p '#{window_index}' 2>/dev/null)
+
 [[ "$state" == "permission" ]] && pw=34 || pw=30
 
 tmux display-popup \
@@ -107,4 +124,6 @@ tmux display-popup \
     -e "NOTIFY_WIN_IDX=$win_idx" \
     -e "NOTIFY_SESSION=$src_session" \
     -e "NOTIFY_LABEL=$label" \
+    -e "NOTIFY_CALLER_SESSION=$caller_session" \
+    -e "NOTIFY_CALLER_WIN_IDX=$caller_win_idx" \
     -E "bash '$SCRIPT' --render"
