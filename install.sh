@@ -1,6 +1,6 @@
 #!/bin/sh
 # Dotfiles installer
-# Installs: common tools, yazi, tmux (Oh my tmux! + plugins), yazi plugins
+# Installs: common tools, yazi, tmux (Oh my tmux! + plugins), yazi plugins, zsh (Prezto)
 # Compatible with: bash, zsh, fish (via shebang)
 # Supported OS: macOS (brew), Arch Linux (pacman), Ubuntu/Debian (curl)
 
@@ -577,10 +577,12 @@ setup_shell_integration() {
     fi
   fi
 
-  # zsh
-  if [ -f "$HOME/.zshrc" ]; then
+  # zsh — skip if ZDOTDIR is configured (common.sh is sourced in $ZDOTDIR/.zshrc)
+  if grep -qF 'ZDOTDIR' "$HOME/.zshenv" 2>/dev/null; then
+    echo "  Skipped: zsh (managed via ZDOTDIR in ~/.config/zsh/.zshrc)"
+  elif [ -f "$HOME/.zshrc" ]; then
     if ! grep -qF "$COMMON_SH" "$HOME/.zshrc"; then
-      printf '\n# dotfiles shared config\n[ -f "%s" ] && . "%s"\n' "$COMMON_SH" "$COMMON_SH" >>"$HOME/.zshrc"
+      printf '\n# dotfiles shared config\n[ -f "%s" ] && . "%s"\n' "$COMMON_SH" "$COMMON_SH" >> "$HOME/.zshrc"
       echo "  Added to ~/.zshrc"
     else
       echo "  Already present: ~/.zshrc"
@@ -705,27 +707,168 @@ setup_claude_statusline() {
 }
 
 # =============================================
+# Zsh configuration (Prezto)
+# Backs up existing zsh dotfiles, clones Prezto, creates symlinks.
+# =============================================
+configure_zsh() {
+    echo "=== Configuring Zsh (Prezto) ==="
+    ZSH_DIR="$SCRIPT_DIR/zsh"
+    ZPREZTO_DIR="$HOME/.local/share/zprezto"
+    ZDOTDIR_PATH="$HOME/.config/zsh"
+
+    if [ ! -d "$ZSH_DIR" ]; then
+        echo "  Warning: zsh config directory not found: $ZSH_DIR, skipping."
+        return
+    fi
+
+    # --- Backup existing zsh files at $HOME ---
+    _backup_zsh_file() {
+        local file="$1"
+        if [ -e "$file" ] && [ ! -L "$file" ]; then
+            local backup="${file}.prezto-bak.$(date +%Y%m%d%H%M%S)"
+            mv "$file" "$backup"
+            echo "  Backed up: $file -> $backup"
+        elif [ -L "$file" ]; then
+            rm "$file"
+            echo "  Removed symlink: $file"
+        fi
+    }
+
+    for f in .zshrc .zshenv .zprofile .zlogin .zlogout .zpreztorc; do
+        # Skip ~/.zshenv if it's our own bootstrap (just sets ZDOTDIR)
+        if [ "$f" = ".zshenv" ] && [ -f "$HOME/.zshenv" ] && grep -qF 'ZDOTDIR' "$HOME/.zshenv"; then
+            echo "  Keeping bootstrap: ~/.zshenv (already sets ZDOTDIR)"
+            continue
+        fi
+        _backup_zsh_file "$HOME/$f"
+    done
+
+    # Clean up known stale files
+    for stale in "$HOME/.zsh_rc" "$HOME/.zshenv.bak" "$HOME/.zshrc.pre-oh-my-zsh"; do
+        if [ -e "$stale" ]; then
+            mv "$stale" "${stale}.cleaned.$(date +%Y%m%d%H%M%S)"
+            echo "  Cleaned stale file: $stale"
+        fi
+    done
+
+    # --- Clone or update Prezto ---
+    if [ -d "$ZPREZTO_DIR/.git" ]; then
+        echo "  Prezto already installed at $ZPREZTO_DIR"
+        (cd "$ZPREZTO_DIR" && git submodule sync --recursive -q && git submodule update --init --recursive -q)
+    else
+        if [ -d "$ZPREZTO_DIR" ]; then
+            echo "  Removing incomplete prezto installation..."
+            rm -rf "$ZPREZTO_DIR"
+        fi
+        echo "  Cloning Prezto..."
+        mkdir -p "$HOME/.local/share"
+        git clone --recursive https://github.com/sorin-ionescu/prezto.git "$ZPREZTO_DIR"
+        echo "  Prezto cloned to $ZPREZTO_DIR"
+    fi
+
+    # --- Ensure ZDOTDIR directory exists ---
+    mkdir -p "$ZDOTDIR_PATH"
+
+    # --- Symlink .zprezto into ZDOTDIR ---
+    ZPREZTO_LINK="$ZDOTDIR_PATH/.zprezto"
+    if [ -L "$ZPREZTO_LINK" ]; then
+        CURRENT_TARGET="$(readlink "$ZPREZTO_LINK")"
+        if [ "$CURRENT_TARGET" = "$ZPREZTO_DIR" ]; then
+            echo "  Symlink OK: $ZPREZTO_LINK"
+        else
+            rm "$ZPREZTO_LINK"
+            ln -s "$ZPREZTO_DIR" "$ZPREZTO_LINK"
+            echo "  Updated symlink: $ZPREZTO_LINK -> $ZPREZTO_DIR"
+        fi
+    elif [ -e "$ZPREZTO_LINK" ]; then
+        mv "$ZPREZTO_LINK" "${ZPREZTO_LINK}.prezto-bak.$(date +%Y%m%d%H%M%S)"
+        ln -s "$ZPREZTO_DIR" "$ZPREZTO_LINK"
+        echo "  Created symlink: $ZPREZTO_LINK -> $ZPREZTO_DIR"
+    else
+        ln -s "$ZPREZTO_DIR" "$ZPREZTO_LINK"
+        echo "  Created symlink: $ZPREZTO_LINK -> $ZPREZTO_DIR"
+    fi
+
+    # --- Symlink zsh config files from repo into ZDOTDIR ---
+    # When the repo IS ~/.config (SCRIPT_DIR=$HOME/.config), files are already
+    # at ZDOTDIR — no symlink needed. Only symlink when they differ.
+    REAL_ZSH_DIR="$(cd "$ZSH_DIR" && pwd -P)"
+    REAL_ZDOTDIR="$(cd "$ZDOTDIR_PATH" && pwd -P)"
+
+    if [ "$REAL_ZSH_DIR" = "$REAL_ZDOTDIR" ]; then
+        echo "  Config files already in ZDOTDIR — no symlinks needed."
+    else
+        for zfile in .zshenv .zprofile .zshrc .zpreztorc; do
+            src="$ZSH_DIR/$zfile"
+            dst="$ZDOTDIR_PATH/$zfile"
+            [ -f "$src" ] || continue
+
+            if [ -L "$dst" ]; then
+                CURRENT_TARGET="$(readlink "$dst")"
+                if [ "$CURRENT_TARGET" = "$src" ]; then
+                    echo "  Symlink OK: $dst"
+                else
+                    rm "$dst"
+                    ln -s "$src" "$dst"
+                    echo "  Updated symlink: $dst -> $src"
+                fi
+            elif [ -e "$dst" ]; then
+                mv "$dst" "${dst}.prezto-bak.$(date +%Y%m%d%H%M%S)"
+                ln -s "$src" "$dst"
+                echo "  Created symlink: $dst -> $src"
+            else
+                ln -s "$src" "$dst"
+                echo "  Created symlink: $dst -> $src"
+            fi
+        done
+    fi
+
+    # --- Bootstrap ~/.zshenv (sets ZDOTDIR) ---
+    HOME_ZSHENV="$HOME/.zshenv"
+    ZDOTDIR_LINE='export ZDOTDIR="$HOME/.config/zsh"'
+    if [ -f "$HOME_ZSHENV" ]; then
+        if grep -qF 'ZDOTDIR' "$HOME_ZSHENV"; then
+            echo "  ~/.zshenv already sets ZDOTDIR"
+        else
+            printf '\n# Set ZDOTDIR so zsh reads config from ~/.config/zsh\n%s\n' "$ZDOTDIR_LINE" >> "$HOME_ZSHENV"
+            echo "  Appended ZDOTDIR to ~/.zshenv"
+        fi
+    else
+        printf '# Set ZDOTDIR so zsh reads config from ~/.config/zsh\n%s\n' "$ZDOTDIR_LINE" > "$HOME_ZSHENV"
+        echo "  Created ~/.zshenv with ZDOTDIR"
+    fi
+
+    echo ""
+    echo "  Note: ~/.oh-my-zsh/ was not removed. Delete it manually after confirming everything works:"
+    echo "    rm -rf ~/.oh-my-zsh"
+    echo ""
+    echo "  Open a new terminal or run: exec zsh"
+}
+
+# =============================================
 # Main
 # =============================================
 detect_os
 
 for step in \
-  install_common_tools \
-  install_ghostty_terminfo \
-  install_yazi \
-  install_yazi_plugins \
-  install_ouch \
-  configure_tmux \
-  install_tpm \
-  install_nvim_image_tools \
-  install_prettier \
-  setup_shell_integration \
-  setup_claude_hooks \
-  setup_claude_statusline; do
-  if ! $step; then
-    echo "  [!] $step failed, continuing..."
-    record_failure "$step"
-  fi
+    install_common_tools \
+    install_ghostty_terminfo \
+    install_yazi \
+    install_yazi_plugins \
+    install_ouch \
+    configure_tmux \
+    install_tpm \
+    install_nvim_image_tools \
+    install_prettier \
+    configure_zsh \
+    setup_shell_integration \
+    setup_claude_hooks \
+    setup_claude_statusline
+do
+    if ! $step; then
+        echo "  [!] $step failed, continuing..."
+        record_failure "$step"
+    fi
 done
 
 echo ""

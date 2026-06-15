@@ -7,6 +7,7 @@ Personal dotfiles managed in `~/.config`, including configurations for:
 - **tmux** — [Oh my tmux!](https://github.com/gpakosz/.tmux) with Catppuccin Mocha theme, vim-tmux-navigator, tpm plugins, agent-status notifications
 - **fish** — Fish shell configuration
 - **yazi** — Terminal file manager with plugins (smart-enter, full-border, git, chmod, diff, ouch, etc.)
+- **zsh** — [Prezto](https://github.com/sorin-ionescu/prezto) framework with agnoster theme, git aliases, syntax highlighting, autosuggestions
 - **htop** — System monitor configuration
 - **uv** — Python package manager configuration
 
@@ -50,6 +51,7 @@ This will:
 - **Install ouch** — multi-format archive tool via cargo
 - **Configure tmux** — symlink `~/.tmux.conf`, copy `.tmux.conf.local`
 - **Install tpm** — tmux plugin manager
+- **Configure zsh** — backup existing dotfiles, install Prezto framework, set up ZDOTDIR symlinks
 - **Ghostty terminfo** — prints instructions if `xterm-ghostty` terminfo is missing (for SSH)
 
 ### 3. Finalize tmux setup
@@ -91,6 +93,49 @@ Enabled via LazyVim extras (`lazyvim.json`):
 ### Seamless Navigation
 
 `C-h/j/k/l` works across both tmux panes and Neovim splits thanks to [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator), configured on both sides.
+
+### Zsh (Prezto Framework)
+
+Zsh configuration lives in `zsh/` (deployed to `~/.config/zsh/` via `ZDOTDIR`), managed by [Prezto](https://github.com/sorin-ionescu/prezto).
+
+#### Modules
+
+| Module | Purpose |
+|--------|---------|
+| `environment` | Shell options, smart URLs, job control |
+| `terminal` | Auto-set tab/window titles |
+| `editor` | Emacs key bindings, dot-expansion (`....` → `../..`), `sudo` insertion (`Ctrl+X Ctrl+S`) |
+| `history` | Extended history, dedup, share across sessions (50k entries) |
+| `directory` | `AUTO_CD`, `AUTO_PUSHD`, directory stack aliases (`d`, `1`–`9`) |
+| `utility` | Safe ops (`cp`/`mv`/`rm` prompt before overwrite) |
+| `git` | Git aliases (`gco`, `gp`, `gl`, `gs`, `gd`, etc.) |
+| `completion` | Tab completion with fuzzy matching, caching, menu selection |
+| `syntax-highlighting` | Real-time command syntax coloring |
+| `history-substring-search` | `↑`/`↓` searches history by typed substring |
+| `autosuggestions` | Fish-style gray text suggestions from history |
+| `prompt` | Sorin theme (git status, exit code on failure) |
+
+#### Key Bindings
+
+| Key | Action | Source |
+|-----|--------|--------|
+| `Ctrl+R` | Fuzzy history search | fzf |
+| `Ctrl+T` | Fuzzy file search & insert path | fzf |
+| `Alt+C` | Fuzzy cd into directory | fzf |
+| `↑` / `↓` | History substring search (type prefix first) | history-substring-search |
+| `Ctrl+F` / `→` | Accept autosuggestion | autosuggestions |
+| `Ctrl+X Ctrl+E` | Edit command in `$EDITOR` | editor |
+| `Ctrl+X Ctrl+S` | Prepend `sudo` to current command | editor |
+| `z <query>` | Smart directory jump | zoxide |
+| `d` | Show directory stack | directory |
+| `1`–`9` | Jump to nth previous directory | directory |
+
+#### Customization
+
+- **Theme**: Edit `zsh/.zpreztorc` → `zstyle ':prezto:module:prompt' theme 'sorin'`. Available: `pure`, `agnoster`, `powerlevel10k`, `steeef`, etc.
+- **Modules**: Add/remove entries in the `pmodule` list in `zsh/.zpreztorc`
+- **Aliases**: Add personal aliases at the bottom of `zsh/.zshrc`
+- **Update Prezto**: `cd ~/.local/share/zprezto && git pull && git submodule update --init --recursive`
 
 ### Recommended Workflow (SSH)
 

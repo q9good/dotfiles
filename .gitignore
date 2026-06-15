@@ -19,6 +19,11 @@ nvim/debug
 **/*.log
 nvim/data
 
+# zsh runtime data (managed by install.sh)
+zsh/.zprezto
+zsh/.zcompdump*
+zsh/.zsh_history*
+
 # runtime data / binaries / machine-local configs (not dotfiles)
 a1/
 git/
