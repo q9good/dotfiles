@@ -3,6 +3,26 @@
 # Managed by dotfiles repo — do not edit directly; edit zsh/.zshrc in ~/.config.
 #
 
+# Homebrew mirrors (BFSU)
+export HOMEBREW_BREW_GIT_REMOTE="https://mirrors.bfsu.edu.cn/git/homebrew/brew.git"
+export HOMEBREW_CORE_GIT_REMOTE="https://mirrors.bfsu.edu.cn/git/homebrew/homebrew-core.git"
+export HOMEBREW_BOTTLE_DOMAIN="https://mirrors.bfsu.edu.cn/homebrew-bottles"
+export HOMEBREW_API_DOMAIN="https://mirrors.bfsu.edu.cn/homebrew-bottles/api"
+
+# Homebrew (Apple Silicon)
+if [[ -x /opt/homebrew/bin/brew ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
+
+# Rust / Cargo
+. "$HOME/.cargo/env"
+
+# ~/.local/bin (uv, pipx, etc.)
+. "$HOME/.local/bin/env"
+
+# npm global packages
+export PATH="$HOME/.npm-global/bin:$PATH"
+
 # Source Prezto
 if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
     source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"

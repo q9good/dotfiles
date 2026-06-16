@@ -6,4 +6,4 @@ end
 test -f "/home/admin/.config/shell/common.fish" && source "/home/admin/.config/shell/common.fish"
 
 # dotfiles shared config
-test -f "/home/wangzhichao.wzc/.config/shell/common.fish" && source "/home/wangzhichao.wzc/.config/shell/common.fish"
+test -f "/Users/banma-3055/.config/shell/common.fish" && source "/Users/banma-3055/.config/shell/common.fish"
