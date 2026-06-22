@@ -216,6 +216,12 @@ install_common_tools() {
       fi
       TOOLS_TO_INSTALL="$(echo "$TOOLS_TO_INSTALL" | sed 's/ *ruff */ /g')"
     fi
+    # jq: install via apt
+    if echo "$TOOLS_TO_INSTALL" | grep -q "jq"; then
+      echo "  Installing jq via apt..."
+      sudo apt-get update -qq && sudo apt-get install -y jq
+      TOOLS_TO_INSTALL="$(echo "$TOOLS_TO_INSTALL" | sed 's/ *jq */ /g')"
+    fi
     # Tools installable via cargo
     CARGO_TOOLS=""
     REMAINING_TOOLS=""
