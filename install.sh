@@ -167,7 +167,6 @@ install_common_tools() {
   check_tool lua
   check_tool unzip
   check_tool jq
-  check_tool herdr
 
   # Clipboard tools (needed by tmux-yank for mouse copy)
   if ! has_clipboard_tool; then
@@ -743,6 +742,12 @@ setup_claude_statusline() {
 # =============================================
 configure_zsh() {
     echo "=== Configuring Zsh (Prezto) ==="
+
+    if ! is_installed zsh; then
+        echo "  zsh not installed — skipping Prezto configuration."
+        return
+    fi
+
     ZSH_DIR="$SCRIPT_DIR/zsh"
     ZPREZTO_DIR="$HOME/.local/share/zprezto"
     ZDOTDIR_PATH="$HOME/.config/zsh"
