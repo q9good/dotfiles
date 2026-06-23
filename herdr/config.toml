@@ -1,0 +1,142 @@
+# Herdr config — keybindings aligned with tmux (Oh-my-tmux + custom .tmux.conf.local)
+#
+# Mapping strategy:
+#   tmux prefix `        → herdr prefix backtick
+#   tmux prefix+\ (h-split) → herdr split_vertical (side-by-side)
+#   tmux prefix+- (v-split) → herdr split_horizontal (stacked)
+#   tmux prefix+H/J/K/L  → herdr swap_pane (shift+h/j/k/l)
+#   tmux prefix+Ctrl-h/l  → herdr previous/next tab
+#   tmux prefix+[         → herdr copy_mode
+#   tmux prefix+r         → herdr reload_config
+#   tmux prefix+z (oh-my-tmux +) → herdr zoom
+#
+# Notes:
+#   - vim-tmux-navigator (Ctrl-h/j/k/l without prefix) cannot be replicated
+#     directly: Ctrl-j = Enter and Ctrl-h = Backspace in terminals, so binding
+#     them would break shell input. Use prefix+h/j/k/l for pane navigation.
+#   - tmux-specific features without herdr equivalent:
+#       synchronize-panes (prefix+A), mouse toggle (prefix+m),
+#       clear-history (prefix+k), join-pane (prefix+M),
+#       monitor-silence (prefix+Ctrl-n)
+#   - Agent-status plugin bindings (prefix+S, prefix+N, prefix+Enter)
+#     map to herdr's built-in goto picker and agent navigation.
+#
+# Reload without restart: herdr server reload-config
+# Reset to defaults:      herdr config reset-keys
+
+[keys]
+# ── Prefix ──────────────────────────────────────────────────────────────────
+# tmux: set -g prefix `  /  bind ` send-prefix
+prefix = "backtick"
+
+# ── Panes ───────────────────────────────────────────────────────────────────
+# tmux: bind \ split-window -h  (side-by-side)
+split_vertical = "prefix+backslash"
+# tmux: bind - split-window -v  (stacked)
+split_horizontal = "prefix+minus"
+
+# tmux: oh-my-tmux h/j/k/l (prefix-mode pane navigation)
+focus_pane_left  = "prefix+h"
+focus_pane_down  = "prefix+j"
+focus_pane_up    = "prefix+k"
+focus_pane_right = "prefix+l"
+
+# tmux: oh-my-tmux H/J/K/L (resize → swap pane)
+swap_pane_left  = "prefix+shift+h"
+swap_pane_down  = "prefix+shift+j"
+swap_pane_up    = "prefix+shift+k"
+swap_pane_right = "prefix+shift+l"
+
+# tmux: oh-my-tmux > / < (swap pane down / up)
+# Already covered by swap_pane_down/swap_pane_up above via shift+j/k.
+# tmux: oh-my-tmux + (maximize/restore pane)
+zoom = "prefix+plus"
+
+# tmux: oh-my-tmux R (prefix+shift+r) for resize mode
+resize_mode = "prefix+shift+r"
+
+# Close pane: tmux oh-my-tmux uses prefix+x for close — same as herdr default.
+close_pane = "prefix+x"
+
+# tmux: prefix+Tab = last active window → herdr: last focused pane
+last_pane = "prefix+tab"
+# Cycle panes (tmux doesn't have this natively, but useful)
+cycle_pane_next     = "prefix+o"
+cycle_pane_previous = "prefix+shift+o"
+
+# Copy mode: tmux oh-my-tmux Enter → copy-mode (overridden by agent-status jump-back)
+# Keep prefix+[ as primary entry, matching standard tmux.
+copy_mode = "prefix+["
+
+# ── Tabs (≈ tmux windows) ───────────────────────────────────────────────────
+# tmux: prefix+c = new window
+new_tab = "prefix+c"
+# tmux: prefix+Ctrl-h / prefix+Ctrl-l = previous/next window
+previous_tab = "prefix+ctrl+h"
+next_tab     = "prefix+ctrl+l"
+# tmux: prefix+1..9 = switch to window N
+switch_tab = "prefix+1..9"
+# Close tab: tmux oh-my-tmux prefix+& or prefix+X
+close_tab = "prefix+shift+x"
+# Rename tab: tmux prefix+,
+rename_tab = "prefix+comma"
+
+# ── Workspaces (≈ tmux sessions) ────────────────────────────────────────────
+# tmux: prefix+Ctrl-c = create new session
+new_workspace = "prefix+ctrl+c"
+# tmux: prefix+Ctrl-f = find/switch session → herdr goto picker
+goto = "prefix+ctrl+f"
+# tmux: prefix+BTab = switch to last session
+previous_workspace = "prefix+shift+tab"
+# Workspace navigation picker
+workspace_picker = "prefix+w"
+# Workspace management
+rename_workspace = "prefix+shift+w"
+close_workspace = "prefix+shift+d"
+
+# ── Agent navigation (≈ tmux agent-status plugin) ───────────────────────────
+# tmux: prefix+N = jump to next done agent session
+next_agent = "prefix+shift+n"
+# tmux: prefix+S = agent session switcher (fzf) → herdr goto picker
+# (goto already bound to prefix+Ctrl-f above; add prefix+s as alternative)
+# focus_agent by index: prefix+Alt+1..9
+focus_agent = "prefix+alt+1..9"
+
+# ── Sidebar ─────────────────────────────────────────────────────────────────
+toggle_sidebar = "prefix+b"
+
+# ── Misc ────────────────────────────────────────────────────────────────────
+# tmux: prefix+r = reload config
+reload_config = "prefix+r"
+# Help panel (shows all bindings)
+help = "prefix+?"
+# Settings
+settings = "prefix+s"
+# Detach (tmux default: prefix+d)
+detach = "prefix+d"
+# Edit config (tmux oh-my-tmux: prefix+e)
+edit_scrollback = "prefix+e"
+
+# ── Navigate mode (inside workspace/sidebar navigation) ─────────────────────
+navigate_workspace_up   = "up"
+navigate_workspace_down = "down"
+navigate_pane_left      = "h"
+navigate_pane_down      = "j"
+navigate_pane_up        = "k"
+navigate_pane_right     = "l"
+
+# ── Theme ───────────────────────────────────────────────────────────────────
+# Match tmux catppuccin mocha theme
+[theme]
+name = "catppuccin"
+
+# ── UI ──────────────────────────────────────────────────────────────────────
+[ui]
+mouse_capture = true
+confirm_close = true
+pane_borders = true
+
+# ── Terminal ────────────────────────────────────────────────────────────────
+[terminal]
+# Match tmux: retain current path for new panes
+new_cwd = "follow"

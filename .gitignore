@@ -24,6 +24,10 @@ zsh/.zprezto
 zsh/.zcompdump*
 zsh/.zsh_history*
 
+# herdr runtime data
+herdr/session.json
+herdr/session-history.json
+
 # runtime data / binaries / machine-local configs (not dotfiles)
 a1/
 git/

@@ -36,6 +36,12 @@ keybind = performable:ctrl+k=goto_split:up
 keybind = performable:ctrl+l=goto_split:right
 
 # =============================================
+# Keybindings — Global
+# =============================================
+# Cmd+Ctrl+T = toggle quick terminal (global, works from any app)
+keybind = global:cmd+ctrl+t=toggle_quick_terminal
+
+# =============================================
 # Keybindings — Terminal
 # =============================================
 # Ctrl+Shift+R = full terminal reset (fix garbled output after SSH disconnect)

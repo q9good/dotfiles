@@ -167,6 +167,7 @@ install_common_tools() {
   check_tool lua
   check_tool unzip
   check_tool jq
+  check_tool herdr
 
   # Clipboard tools (needed by tmux-yank for mouse copy)
   if ! has_clipboard_tool; then
@@ -360,6 +361,30 @@ install_ouch() {
   else
     echo "  [!] cargo not found. Please install Rust first, then run: cargo install ouch"
   fi
+}
+
+# =============================================
+# herdr — agent multiplexer (fallback for non-brew platforms)
+# =============================================
+install_herdr() {
+  echo "=== Installing herdr ==="
+  if is_installed herdr; then
+    echo "herdr already installed: $(herdr --version 2>/dev/null)"
+    return
+  fi
+  # brew already handled by install_common_tools; handle remaining platforms
+  case "$OS" in
+  arch)
+    install_with_pacman herdr
+    ;;
+  ubuntu | linux-unknown)
+    echo "  Installing herdr via official installer..."
+    curl -fsSL https://herdr.dev/install.sh | sh
+    ;;
+  *)
+    echo "  [!] Unsupported OS. Please install manually: https://herdr.dev/docs/install/"
+    ;;
+  esac
 }
 
 # =============================================
@@ -858,6 +883,7 @@ detect_os
 
 for step in \
     install_common_tools \
+    install_herdr \
     install_ghostty_terminfo \
     install_yazi \
     install_yazi_plugins \
