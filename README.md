@@ -92,7 +92,9 @@ Enabled via LazyVim extras (`lazyvim.json`):
 
 ### Seamless Navigation
 
-`C-h/j/k/l` works across both tmux panes and Neovim splits thanks to [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator), configured on both sides.
+`C-h/j/k/l` works seamlessly across tmux panes, Neovim splits, and classic vim splits thanks to [vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator), configured on all three sides (tmux `is_vim` forwarding, Neovim plugin, and classic-vim plugin).
+
+Classic vim's side lives in `vim/.vimrc` (symlinked to `~/.vimrc` by `install.sh`, which also installs the plugin as a vim8 native package under `~/.vim/pack/plugins/start/`). It sources Vim's distributed defaults so nothing regresses; put personal/per-machine vim tweaks in `~/.vimrc.local` (sourced last, not tracked). If a machine already had a `~/.vimrc`, `install.sh` migrates it into `~/.vimrc.local` so existing settings keep loading.
 
 ### Zsh (Prezto Framework)
 

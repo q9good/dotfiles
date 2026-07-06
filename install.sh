@@ -449,6 +449,74 @@ install_tpm() {
 }
 
 # =============================================
+# Classic vim configuration (vim-tmux-navigator)
+# Gives /usr/bin/vim the same seamless Ctrl+h/j/k/l navigation that tmux and
+# Neovim already share. tmux's is_vim check forwards those keys into vim, but
+# without this the plugin/mappings are missing, so navigation does nothing.
+# =============================================
+configure_vim() {
+  echo "=== Configuring vim (vim-tmux-navigator) ==="
+
+  if ! is_installed vim; then
+    echo "  vim not installed — skipping."
+    return
+  fi
+
+  VIM_SOURCE="$SCRIPT_DIR/vim/.vimrc"
+  VIM_TARGET="$HOME/.vimrc"
+  VIM_LOCAL="$HOME/.vimrc.local"
+
+  if [ ! -f "$VIM_SOURCE" ]; then
+    echo "  Warning: source not found: $VIM_SOURCE, skipping vim config."
+    return
+  fi
+
+  # Preserve any pre-existing real ~/.vimrc: copy it to ~/.vimrc.local (which our
+  # repo .vimrc sources last, so the user's settings keep applying), then back up
+  # the original before replacing it with the symlink. Never clobber an existing
+  # ~/.vimrc.local, and never migrate our own symlink.
+  if [ -e "$VIM_TARGET" ] && [ ! -L "$VIM_TARGET" ]; then
+    if [ ! -e "$VIM_LOCAL" ]; then
+      cp "$VIM_TARGET" "$VIM_LOCAL"
+      echo "  Preserved existing ~/.vimrc -> ~/.vimrc.local (still sourced)"
+    else
+      echo "  ~/.vimrc.local already exists — leaving it untouched"
+    fi
+    mv "$VIM_TARGET" "$VIM_TARGET.bak.$(date +%Y%m%d%H%M%S)"
+    echo "  Backed up original ~/.vimrc"
+  fi
+
+  # Symlink the repo .vimrc into place.
+  if [ -L "$VIM_TARGET" ]; then
+    CURRENT_VIM_LINK="$(readlink "$VIM_TARGET")"
+    if [ "$CURRENT_VIM_LINK" = "$VIM_SOURCE" ]; then
+      echo "  Symlink already correct: $VIM_TARGET"
+    else
+      echo "  Updating symlink: $VIM_TARGET (was $CURRENT_VIM_LINK)"
+      rm "$VIM_TARGET"
+      ln -s "$VIM_SOURCE" "$VIM_TARGET"
+    fi
+  else
+    ln -s "$VIM_SOURCE" "$VIM_TARGET"
+    echo "  Symlink created: $VIM_TARGET -> $VIM_SOURCE"
+  fi
+
+  # Install/update vim-tmux-navigator as a vim8 native package.
+  VTN_DIR="$HOME/.vim/pack/plugins/start/vim-tmux-navigator"
+  if [ -d "$VTN_DIR/.git" ]; then
+    echo "  vim-tmux-navigator already installed — updating..."
+    (cd "$VTN_DIR" && git pull -q --ff-only) || echo "  [!] update skipped (local changes?)"
+  else
+    mkdir -p "$(dirname "$VTN_DIR")"
+    git clone -q https://github.com/christoomey/vim-tmux-navigator "$VTN_DIR"
+    echo "  Cloned vim-tmux-navigator -> $VTN_DIR"
+  fi
+
+  # Best-effort help tags so :help tmux-navigator works.
+  vim -es -u NONE -c "helptags $VTN_DIR/doc" -c q >/dev/null 2>&1 || true
+}
+
+# =============================================
 # Neovim image/LaTeX/mermaid tools (local only)
 # On macOS/Arch, install tools for snacks.nvim image viewer.
 # On Ubuntu (SSH remote), these are disabled in nvim config.
@@ -895,6 +963,7 @@ for step in \
     install_ouch \
     configure_tmux \
     install_tpm \
+    configure_vim \
     install_nvim_image_tools \
     install_prettier \
     configure_zsh \

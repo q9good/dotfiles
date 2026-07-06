@@ -1,3 +1,4 @@
+onboarding = false
 # Herdr config — keybindings aligned with tmux (Oh-my-tmux + custom .tmux.conf.local)
 #
 # Mapping strategy:
@@ -60,9 +61,9 @@ close_pane = "prefix+x"
 
 # tmux: prefix+Tab = last active window → herdr: last focused pane
 last_pane = "prefix+tab"
-# Cycle panes (tmux doesn't have this natively, but useful)
-cycle_pane_next     = "prefix+o"
-cycle_pane_previous = "prefix+shift+o"
+# Cycle panes (n=next, p=previous; prefix+o reserved for open_notification_target)
+cycle_pane_next     = "prefix+n"
+cycle_pane_previous = "prefix+p"
 
 # Copy mode: tmux oh-my-tmux Enter → copy-mode (overridden by agent-status jump-back)
 # Keep prefix+[ as primary entry, matching standard tmux.
