@@ -90,17 +90,14 @@ case "$hook_type" in
 
     Notification)
         msg=$(json_val "$input" "message")
-        current=$(cat "$PANE_DIR/${TMUX_SESSION}_${PANE_ID}.status" 2>/dev/null)
         ring_bell
-        if [ "$current" != "done" ]; then
-            set_pane_status "wait"
-            aggregate_session
-            label="INPUT?"
-            if [[ "$msg" =~ to\ use\ (.+) ]]; then
-                label="${BASH_REMATCH[1]}?"
-            fi
-            "$SCRIPT_DIR/../scripts/popup.sh" --state=permission --label="$label" --pane="$PANE_ID" --session="$TMUX_SESSION" &
+        set_pane_status "wait"
+        aggregate_session
+        label="INPUT?"
+        if [[ "$msg" =~ to\ use\ (.+) ]]; then
+            label="${BASH_REMATCH[1]}?"
         fi
+        "$SCRIPT_DIR/../scripts/popup.sh" --state=permission --label="$label" --pane="$PANE_ID" --session="$TMUX_SESSION" &
         ;;
 esac
 
