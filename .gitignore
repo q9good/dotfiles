@@ -18,6 +18,7 @@ nvim/debug
 **/foo.*
 **/*.log
 nvim/data
+nvim/lua/config/secrets.lua
 
 # zsh runtime data (managed by install.sh)
 zsh/.zprezto

@@ -12,13 +12,16 @@ onboarding = false
 #   tmux prefix+z (oh-my-tmux +) → herdr zoom
 #
 # Notes:
-#   - vim-tmux-navigator (Ctrl-h/j/k/l without prefix) cannot be replicated
-#     directly: Ctrl-j = Enter and Ctrl-h = Backspace in terminals, so binding
-#     them would break shell input. Use prefix+h/j/k/l for pane navigation.
+#   - vim-tmux-navigator style: Ctrl-h/j/k/l (no prefix) moves panes directly.
+#     Works because Ghostty speaks the kitty keyboard protocol, so herdr can
+#     tell Ctrl-h/j apart from Backspace/Enter. Cost: Ctrl-h/j/k/l inside panes
+#     is captured by herdr (shell readline kill-line etc. stops working there).
+#     prefix+arrow keys remain as a fallback.
 #   - tmux-specific features without herdr equivalent:
 #       synchronize-panes (prefix+A), mouse toggle (prefix+m),
-#       clear-history (prefix+k), join-pane (prefix+M),
-#       monitor-silence (prefix+Ctrl-n)
+#       join-pane (prefix+M), monitor-silence (prefix+Ctrl-n)
+#   - prefix+k emulates tmux clear-history: a custom command sends Ctrl-L to
+#     the focused pane (clears the screen; scrollback is kept).
 #   - Agent-status plugin bindings (prefix+S, prefix+N, prefix+Enter)
 #     map to herdr's built-in goto picker and agent navigation.
 #
@@ -36,11 +39,13 @@ split_vertical = "prefix+backslash"
 # tmux: bind - split-window -v  (stacked)
 split_horizontal = "prefix+minus"
 
-# tmux: oh-my-tmux h/j/k/l (prefix-mode pane navigation)
-focus_pane_left  = "prefix+h"
-focus_pane_down  = "prefix+j"
-focus_pane_up    = "prefix+k"
-focus_pane_right = "prefix+l"
+# vim-tmux-navigator: Ctrl-h/j/k/l without prefix (direct terminal bindings).
+# prefix+k is freed for clear-history ([[keys.command]] below);
+# prefix+arrows kept as fallback.
+focus_pane_left  = ["ctrl+h", "prefix+left"]
+focus_pane_down  = ["ctrl+j", "prefix+down"]
+focus_pane_up    = ["ctrl+k", "prefix+up"]
+focus_pane_right = ["ctrl+l", "prefix+right"]
 
 # tmux: oh-my-tmux H/J/K/L (resize → swap pane)
 swap_pane_left  = "prefix+shift+h"
@@ -115,6 +120,13 @@ help = "prefix+?"
 settings = "prefix+s"
 # Detach (tmux default: prefix+d)
 detach = "prefix+d"
+
+# tmux: prefix+k = clear-history (prefix+k freed from focus_pane_up above).
+# Custom command: send Ctrl-L to the focused pane (clears screen; scrollback kept).
+[[keys.command]]
+key = "prefix+k"
+type = "shell"
+command = "p=\"${HERDR_ACTIVE_PANE_ID:-$(herdr pane list | jq -r '.result.panes[] | select(.focused) | .pane_id')}\"; [ -n \"$p\" ] && herdr pane send-keys \"$p\" ctrl+l"
 # Edit config (tmux oh-my-tmux: prefix+e)
 edit_scrollback = "prefix+e"
 
