@@ -12,8 +12,10 @@ inject() {
     fmt=$(timeout 2 tmux show-option -gv "$option" 2>/dev/null)
     [ -n "$fmt" ] || return
     printf '%s' "$fmt" | grep -q "win-status" && return
-    # Insert before " #T" so status appears between window index and title
-    local new="${fmt/ #T/${MARKER} #T}"
+    # Insert before " #T" so status appears between window index and title.
+    # Also inject #W (window name) so manual renames (prefix ,) are visible
+    # alongside the dynamic pane title #T.
+    local new="${fmt/ #T/${MARKER} #W #T}"
     if [ "$new" = "$fmt" ]; then
         new="${fmt}${MARKER}"
     fi

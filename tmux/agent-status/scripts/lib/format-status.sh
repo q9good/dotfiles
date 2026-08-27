@@ -49,12 +49,18 @@ fmt_pane_shell() {
     local sess="$1" pane_id="$2"
     local rf="$SHELL_DIR/${sess}_${pane_id}.running"
     if [ -f "$rf" ]; then
-        local shell_type cmd start_ts
+        local shell_type cmd start_ts is_noise=0
         IFS=':' read -r shell_type cmd start_ts < "$rf"
-        local age=$(( now - start_ts ))
-        if (( age >= 3 )); then
-            printf '%s▶%s %s' "$shell_type" "$cmd" "$(fmt_elapsed "$start_ts")"
-            return
+        # Ignore noise from internal hook functions (e.g. zoxide __zoxide_hook)
+        # that leak into .running via PROMPT_COMMAND/DEBUG and never get cleared
+        # in long-lived panes.
+        case "$cmd" in __zoxide_*) is_noise=1;; esac
+        if (( is_noise == 0 )); then
+            local age=$(( now - start_ts ))
+            if (( age >= 3 )); then
+                printf '%s▶%s %s' "$shell_type" "$cmd" "$(fmt_elapsed "$start_ts")"
+                return
+            fi
         fi
     fi
     # Idle: use caller-supplied pane_cmd, or query tmux as fallback

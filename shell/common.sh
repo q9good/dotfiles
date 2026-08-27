@@ -22,6 +22,10 @@ _notify_bell() {
 _as_write_running() {
     local cmd="$1"
     [ -z "${TMUX:-}" ] || [ -z "${TMUX_PANE:-}" ] && return
+    # Skip internal hook functions (zoxide's __zoxide_hook etc.) that fire via
+    # PROMPT_COMMAND/DEBUG — they're not real user commands and otherwise get
+    # recorded as "running" forever in long-lived (e.g. TUI) panes.
+    case "$cmd" in __zoxide_*) return;; esac
     local sess
     sess=$(tmux display-message -p '#{session_name}' 2>/dev/null) || return
     mkdir -p "$_AS_SHELL_DIR"
