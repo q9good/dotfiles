@@ -120,13 +120,6 @@ help = "prefix+?"
 settings = "prefix+s"
 # Detach (tmux default: prefix+d)
 detach = "prefix+d"
-
-# tmux: prefix+k = clear-history (prefix+k freed from focus_pane_up above).
-# Custom command: send Ctrl-L to the focused pane (clears screen; scrollback kept).
-[[keys.command]]
-key = "prefix+k"
-type = "shell"
-command = "p=\"${HERDR_ACTIVE_PANE_ID:-$(herdr pane list | jq -r '.result.panes[] | select(.focused) | .pane_id')}\"; [ -n \"$p\" ] && herdr pane send-keys \"$p\" ctrl+l"
 # Edit config (tmux oh-my-tmux: prefix+e)
 edit_scrollback = "prefix+e"
 
@@ -138,6 +131,14 @@ navigate_pane_down      = "j"
 navigate_pane_up        = "k"
 navigate_pane_right     = "l"
 
+# tmux: prefix+k = clear-history (prefix+k freed from focus_pane_up above).
+# Custom command: send Ctrl-L to the focused pane (clears screen; scrollback kept).
+# Keep array-of-table entries last: TOML keys below [[keys.command]] belong to that command.
+[[keys.command]]
+key = "prefix+k"
+type = "shell"
+command = "p=\"${HERDR_ACTIVE_PANE_ID:-$(herdr pane list | jq -r '.result.panes[] | select(.focused) | .pane_id')}\"; [ -n \"$p\" ] && herdr pane send-keys \"$p\" ctrl+l"
+
 # ── Theme ───────────────────────────────────────────────────────────────────
 # Match tmux catppuccin mocha theme
 [theme]
@@ -148,6 +149,14 @@ name = "catppuccin"
 mouse_capture = true
 confirm_close = true
 pane_borders = true
+agent_panel_sort = "priority"
+
+[ui.toast]
+delivery = "terminal"
+delay_seconds = 1
+
+[ui.sound]
+enabled = true
 
 # ── Terminal ────────────────────────────────────────────────────────────────
 [terminal]
