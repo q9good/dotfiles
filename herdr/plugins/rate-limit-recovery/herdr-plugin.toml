@@ -1,0 +1,9 @@
+id = "local.rate-limit-recovery"
+name = "Rate Limit Recovery"
+version = "0.2.0"
+min_herdr_version = "0.9.0"
+description = "Safely resume nested runner agents after an explicit rate-limit error."
+platforms = ["linux", "macos"]
+
+[[startup]]
+command = ["python3", "start.py"]

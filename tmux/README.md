@@ -166,6 +166,20 @@ Registered in `~/.claude/settings.json`. The hook script is `agent-status/hooks/
 | `Notification` (active) | Set pane → wait, ring bell, show popup |
 | `Notification` (after done) | Ring bell only |
 
+### Rate-limit auto recovery
+
+A singleton watcher checks the final 16 non-empty lines of each live tmux pane every 5 seconds. It schedules `go on` only when that terminal tail contains an explicit `rate limit exceeded`, `too many requests`, `HTTP 429`, `status code 429`, or `error code 429` error.
+
+Safety limits:
+
+- Wait 75 seconds before the first retry and 150 seconds before the second.
+- Re-check that the pane still exists and its terminal output is unchanged before sending.
+- Retry at most twice per pane in a rolling 30-minute window.
+- Explicitly recognizes Codex messages such as `■ rate limit exceeded: Your requests to ... have exceeded rate limit.` even when the remainder wraps onto another line.
+- Never react to ordinary failures, approval prompts, or other agent states.
+
+Optional environment overrides are `TMUX_RATE_LIMIT_POLL_SECONDS`, `TMUX_RATE_LIMIT_WAIT_SECONDS` (minimum 60), `TMUX_RATE_LIMIT_WINDOW_SECONDS` (minimum 300), and `TMUX_RATE_LIMIT_MAX_RETRIES` (1–3).
+
 State files live in `~/.cache/agent-status/`:
 
 ```
@@ -184,6 +198,7 @@ shell/     <session>_<pane>.{running,notify}
 | `scripts/switcher.sh` | fzf session/window picker |
 | `scripts/popup.sh` | Notification popup dispatcher + renderer |
 | `scripts/notify-shell.sh` | Called by shell integration on long-cmd finish |
+| `scripts/rate-limit-watcher.sh` | Safely retries explicit rate-limit failures after a cooldown |
 | `scripts/inject-window-format.sh` | Appends win-status to window-status-format post-Catppuccin |
 | `scripts/lib/format-status.sh` | Shared pane status formatting (`fmt_pane_claude`, `fmt_pane_shell`) |
 | `scripts/lib/state.sh` | Shared state directory constants |

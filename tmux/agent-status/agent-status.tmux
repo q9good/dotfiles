@@ -13,11 +13,16 @@ chmod +x \
     "$CURRENT_DIR/scripts/switcher.sh" \
     "$CURRENT_DIR/scripts/win-status.sh" \
     "$CURRENT_DIR/scripts/inject-window-format.sh" \
+    "$CURRENT_DIR/scripts/rate-limit-watcher.sh" \
     "$CURRENT_DIR/scripts/lib/jump-back.sh" \
     "$CURRENT_DIR/scripts/lib/next-done.sh" \
     "$CURRENT_DIR/scripts/lib/session-preview.sh" \
     "$CURRENT_DIR/scripts/lib/state.sh" \
     2>/dev/null
+
+# Start one conservative watcher per tmux server. It only resumes panes whose
+# final visible output is an explicit rate-limit error.
+tmux run-shell -b "bash '$CURRENT_DIR/scripts/rate-limit-watcher.sh'"
 
 # ── Key bindings ──────────────────────────────────────────────────────────────
 #
