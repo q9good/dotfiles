@@ -20,8 +20,9 @@ onboarding = false
 #   - tmux-specific features without herdr equivalent:
 #       synchronize-panes (prefix+A), mouse toggle (prefix+m),
 #       join-pane (prefix+M), monitor-silence (prefix+Ctrl-n)
-#   - prefix+k mirrors tmux: erases the visible area, then sends Ctrl-L to
-#     redraw the prompt. No clear-history equivalent exists; host scrollback kept.
+#   - prefix+k repairs a pane stuck in kitty-keyboard/SGR-mouse mode (garbled
+#     9;5:1u / 35;66;1M echo after a TUI dies) AND clears the screen, mirroring
+#     tmux bind k. No clear-history equivalent exists; host scrollback kept.
 #   - Agent-status plugin bindings (prefix+S, prefix+N, prefix+Enter)
 #     map to herdr's built-in goto picker and agent navigation.
 #
@@ -133,14 +134,25 @@ navigate_pane_right     = "l"
 
 # tmux: bind k run-shell 'printf "\033[2J\033[H" > "#{pane_tty}"' \; send-keys C-l \; clear-history
 # (prefix+k freed from focus_pane_up above.)
-# Custom command: erase the visible area, then Ctrl-L to redraw the prompt.
+#
+# Why this is more than tmux's clear: when a TUI (e.g. cloudcli-ssh websocket
+# bridge) dies without popping terminal modes, the pane's emulator stays in
+# kitty-keyboard / SGR-mouse mode and every keystroke or mouse move is echoed
+# as encoded garbage (9;5:1u / 35;66;1M). This binding repairs that:
+#   1. Resolve the focused pane's tty via its shell pid.
+#   2. If the shell itself is in the foreground (no live TUI), first write the
+#      mode-reset sequences (\e[<1u x3, \e[?1000l..\e[?1006l, \e[?1004l,
+#      \e[?2004l) to the tty as OUTPUT — the only path the emulator parses.
+#      Guarded so a running TUI keeps its own modes.
+#   3. Always erase the visible area (\e[2J\e[H), restore the cursor (\e[?25h),
+#      then Ctrl-L to redraw the prompt.
 # NOTE: herdr has no clear-history equivalent (no API; \e[3J does not clear its
 # host scrollback — verified 0.9.0). Host scrollback is kept.
 # Keep array-of-table entries last: TOML keys below [[keys.command]] belong to that command.
 [[keys.command]]
 key = "prefix+k"
 type = "shell"
-command = "p=\"${HERDR_ACTIVE_PANE_ID:-$(herdr pane list | jq -r '.result.panes[] | select(.focused) | .pane_id')}\"; [ -n \"$p\" ] && herdr pane send-text \"$p\" \"$(printf '\\033[2J\\033[H')\" && herdr pane send-keys \"$p\" ctrl+l"
+command = "p=\"${HERDR_ACTIVE_PANE_ID:-$(herdr pane list | jq -r '.result.panes[]|select(.focused)|.pane_id')}\"; [ -n \"$p\" ] || exit 0; pi=$(herdr pane process-info --pane \"$p\" 2>/dev/null); sp=$(printf \"%s\" \"$pi\" | jq -r '.result.process_info.shell_pid//empty'); fg=$(printf \"%s\" \"$pi\" | jq -r '.result.process_info.foreground_process_group_id//empty'); t=$(ps -o tty= -p \"$sp\" 2>/dev/null | tr -d \" \"); [ -n \"$t\" ] && [ \"$t\" != \"?\" ] || exit 0; c=\"\\033[2J\\033[H\\033[?25h\"; if [ \"$sp\" = \"$fg\" ]; then printf \"%b%b\" \"\\033[<1u\\033[<1u\\033[<1u\\033[?1000l\\033[?1002l\\033[?1003l\\033[?1005l\\033[?1006l\\033[?1004l\\033[?2004l\" \"$c\" > \"/dev/$t\"; else printf \"%b\" \"$c\" > \"/dev/$t\"; fi; herdr pane send-keys \"$p\" ctrl+l"
 
 # ── Theme ───────────────────────────────────────────────────────────────────
 # Match tmux catppuccin mocha theme
