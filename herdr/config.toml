@@ -20,8 +20,8 @@ onboarding = false
 #   - tmux-specific features without herdr equivalent:
 #       synchronize-panes (prefix+A), mouse toggle (prefix+m),
 #       join-pane (prefix+M), monitor-silence (prefix+Ctrl-n)
-#   - prefix+k emulates tmux clear-history: a custom command sends Ctrl-L to
-#     the focused pane (clears the screen; scrollback is kept).
+#   - prefix+k mirrors tmux: erases the visible area, then sends Ctrl-L to
+#     redraw the prompt. No clear-history equivalent exists; host scrollback kept.
 #   - Agent-status plugin bindings (prefix+S, prefix+N, prefix+Enter)
 #     map to herdr's built-in goto picker and agent navigation.
 #
@@ -131,13 +131,16 @@ navigate_pane_down      = "j"
 navigate_pane_up        = "k"
 navigate_pane_right     = "l"
 
-# tmux: prefix+k = clear-history (prefix+k freed from focus_pane_up above).
-# Custom command: send Ctrl-L to the focused pane (clears screen; scrollback kept).
+# tmux: bind k run-shell 'printf "\033[2J\033[H" > "#{pane_tty}"' \; send-keys C-l \; clear-history
+# (prefix+k freed from focus_pane_up above.)
+# Custom command: erase the visible area, then Ctrl-L to redraw the prompt.
+# NOTE: herdr has no clear-history equivalent (no API; \e[3J does not clear its
+# host scrollback — verified 0.9.0). Host scrollback is kept.
 # Keep array-of-table entries last: TOML keys below [[keys.command]] belong to that command.
 [[keys.command]]
 key = "prefix+k"
 type = "shell"
-command = "p=\"${HERDR_ACTIVE_PANE_ID:-$(herdr pane list | jq -r '.result.panes[] | select(.focused) | .pane_id')}\"; [ -n \"$p\" ] && herdr pane send-keys \"$p\" ctrl+l"
+command = "p=\"${HERDR_ACTIVE_PANE_ID:-$(herdr pane list | jq -r '.result.panes[] | select(.focused) | .pane_id')}\"; [ -n \"$p\" ] && herdr pane send-text \"$p\" \"$(printf '\\033[2J\\033[H')\" && herdr pane send-keys \"$p\" ctrl+l"
 
 # ── Theme ───────────────────────────────────────────────────────────────────
 # Match tmux catppuccin mocha theme
