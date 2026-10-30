@@ -5,6 +5,9 @@
 # Theme & Appearance
 # =============================================
 theme = Catppuccin Mocha
+# Nerd Font (JetBrains Mono) — 给 pi-open-tui / powerline 图标用
+# 终端推荐 Mono 变体(图标单宽, 对齐最稳); 想要标准版改成 "JetBrainsMono Nerd Font"
+font-family = "JetBrainsMono Nerd Font Mono"
 copy-on-select = true
 background-image-opacity = 0.75
 background-opacity = 0.88
